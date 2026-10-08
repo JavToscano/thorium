@@ -1,0 +1,42 @@
+# Project documentation (local only for now)
+docs/
+
+# Gradle / build output
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Machine-specific configuration (SDK paths, signing secrets)
+local.properties
+*.keystore
+*.jks
+keystore.properties
+google-services.json
+
+# Artifacts
+*.apk
+*.aab
+*.ap_
+*.dex
+*.log
+hs_err_pid*
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.fleet/
+
+# Operating system
+.DS_Store
+._*
+Thumbs.db
+
+# Agent tooling and merge leftovers
+.claude/
+*.orig
+*.rej
