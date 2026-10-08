@@ -108,4 +108,20 @@ class LibraryScannerTest {
         val result = LibraryScanner().scan(listOf(root, File(root, "missing")))
         assertTrue(result.library.games.isEmpty())
     }
+
+    @Test
+    fun `a root that is itself a platform folder is scanned directly`() {
+        val gba = File(root, "My Games/gba").apply { mkdirs() }
+        File(gba, "Direct.gba").writeBytes(ByteArray(8) { 1 })
+        val result = LibraryScanner().scan(listOf(gba))
+        assertEquals(listOf("Direct"), result.library.games.map { it.title })
+    }
+
+    @Test
+    fun `overlapping roots do not duplicate games`() {
+        file("Roms/gba/Same.gba")
+        val result = LibraryScanner().scan(listOf(root, File(root, "Roms"), File(root, "Roms/gba")))
+        assertEquals(1, result.library.games.size)
+        assertFalse(result.library.games.single().isDuplicate)
+    }
 }

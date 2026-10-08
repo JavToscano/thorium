@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import com.thorium.app.storage.StoragePermission
 import com.thorium.app.storage.StorageRoots
 import com.thorium.app.ui.main.AppViewModel
-import com.thorium.data.db.LibraryRepository
+import com.thorium.data.db.ThoriumData
 
 /**
  * Owns the single [AppViewModel] shared by every activity (one per display), so the top and
@@ -21,7 +21,8 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
         ViewModelProvider(this)[AppViewModel::class.java].also {
             it.permissionGranted = StoragePermission::isGranted
             it.storageRoots = { StorageRoots.detect(this) }
-            it.attachRepository(LibraryRepository.create(this))
+            it.storageVolumes = { StorageRoots.volumes(this) }
+            it.attachData(ThoriumData.create(this))
         }
     }
 }

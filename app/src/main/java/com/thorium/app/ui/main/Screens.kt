@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.thorium.app.ui.settings.SettingsScreen
 import com.thorium.core.model.Game
 import com.thorium.core.ui.components.ActionButton
 import com.thorium.core.ui.components.Cover
@@ -46,13 +47,13 @@ fun ThoriumApp(vm: AppViewModel) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (vm.libraryState is LibraryState.NeedsPermission) {
                     PermissionScreen()
+                } else if (vm.tab == Tab.Settings) {
+                    SettingsScreen(vm.settings)
                 } else {
                     key(vm.tab) { RowsScreen(vm) }
                 }
             }
-            HintBar(
-                listOf("A" to "Select", "B" to "Back", "Y" to "Favorite", "START" to "Menu", "SELECT" to "Options")
-            )
+            HintBar(vm.hints)
         }
 
         AnimatedVisibility(vm.detail != null, enter = fadeIn() + scaleIn(initialScale = 0.96f), exit = fadeOut() + scaleOut(targetScale = 0.96f)) {
@@ -138,16 +139,13 @@ private fun MenuOverlay(vm: AppViewModel) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("Menu", color = Palette.TextSecondary, fontSize = 13.sp)
-            MENU_ITEMS.forEachIndexed { i, item -> ActionButton(menuLabel(item, vm), focused = vm.menuIndex == i, modifier = Modifier.fillMaxWidth()) }
+            MENU_ITEMS.forEachIndexed { i, item -> ActionButton(item, focused = vm.menuIndex == i, modifier = Modifier.fillMaxWidth()) }
         }
     }
 }
 
 private fun formatSize(bytes: Long): String =
     String.format(Locale.US, "%.1f MB", bytes / 1_048_576.0)
-
-private fun menuLabel(item: String, vm: AppViewModel): String =
-    if (item == "Dual screen") "Dual screen: ${if (vm.companionEnabled) "On" else "Off"}" else item
 
 @Composable
 private fun PermissionScreen() {

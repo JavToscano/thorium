@@ -10,7 +10,11 @@ import androidx.lifecycle.viewModelScope
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
 import com.thorium.core.model.Library
-import com.thorium.data.db.LibraryRepository
+import com.thorium.app.storage.StorageVolumeInfo
+import com.thorium.app.ui.settings.SettingsController
+import com.thorium.app.ui.settings.SettingsHost
+import com.thorium.data.db.ScanSettings
+import com.thorium.data.db.ThoriumData
 import com.thorium.data.library.LibraryScanner
 import com.thorium.data.library.PlatformCatalog
 import com.thorium.data.library.ScanStats
@@ -19,10 +23,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 
-enum class Tab(val title: String) { Home("Home"), Systems("Systems"), Favorites("Favorites") }
+enum class Tab(val title: String) { Home("Home"), Systems("Systems"), Favorites("Favorites"), Settings("Settings") }
 
 sealed interface CardModel {
     val key: String
@@ -36,7 +41,7 @@ sealed interface CardModel {
 
 data class RowModel(val id: String, val title: String, val items: List<CardModel>)
 
-val MENU_ITEMS = listOf("Resume", "Rescan library", "Dual screen", "Diagnostics", "About")
+val MENU_ITEMS = listOf("Resume", "Rescan library", "Settings")
 val DETAIL_BUTTONS = listOf("Play", "Favorite")
 
 sealed interface LibraryState {
@@ -58,27 +63,37 @@ class AppViewModel : ViewModel() {
     // Favorite game ids in the order they were added; mirrored from the database.
     private var favorites by mutableStateOf<List<String>>(emptyList())
 
-    private var repository: LibraryRepository? = null
+    private var data: ThoriumData? = null
+
+    private var scanSettings by mutableStateOf(ScanSettings())
+    private var rescanQueued = false
 
     var libraryState by mutableStateOf<LibraryState>(LibraryState.Scanning); private set
 
     /** Wired by the application: storage permission check and the folders to scan. */
     var permissionGranted: () -> Boolean = { true }
     var storageRoots: () -> List<File> = { emptyList() }
+    var storageVolumes: () -> List<StorageVolumeInfo> = { emptyList() }
     var onRequestStoragePermission: (() -> Unit)? = null
 
     /**
-     * Connects the persistence layer. The library and favorites shown in the UI come from the
-     * database, so the last known library appears instantly on launch, before any scan finishes.
+     * Connects the persistence layer. The library, favorites and settings shown in the UI come
+     * from the database, so the last known library appears instantly on launch, before any scan
+     * finishes.
      */
-    fun attachRepository(repository: LibraryRepository) {
-        if (this.repository != null) return
-        this.repository = repository
+    fun attachData(data: ThoriumData) {
+        if (this.data != null) return
+        this.data = data
+        // Read once up front so a disabled companion never flashes open at launch.
+        companionEnabled = runBlocking { data.settings.isCompanionEnabled() }
         viewModelScope.launch {
-            repository.observeGames().collect { games -> library = buildLibrary(games) }
+            data.library.observeGames().collect { games -> library = buildLibrary(games) }
         }
         viewModelScope.launch {
-            repository.observeFavoriteIds().collect { favorites = it }
+            data.library.observeFavoriteIds().collect { favorites = it }
+        }
+        viewModelScope.launch {
+            data.settings.observeScanSettings().collect { scanSettings = it }
         }
     }
 
@@ -95,7 +110,7 @@ class AppViewModel : ViewModel() {
     var menuIndex by mutableIntStateOf(0); private set
     var toast by mutableStateOf<String?>(null); private set
 
-    /** User preference: show the companion on the secondary display when one exists. */
+    /** User preference (persisted): show the companion on the secondary display when one exists. */
     var companionEnabled by mutableStateOf(true); private set
 
     /** False once the main activity is finishing, so the companion closes with it. */
@@ -111,6 +126,57 @@ class AppViewModel : ViewModel() {
     private var toastJob: Job? = null
 
     var onOpenDiagnostics: (() -> Unit)? = null
+
+    val settings = SettingsController(object : SettingsHost {
+        override val autoDetectStorage get() = scanSettings.autoDetectStorage
+        override val customRoots get() = scanSettings.customRoots
+        override val companionEnabled get() = this@AppViewModel.companionEnabled
+        override fun volumes() = storageVolumes()
+        override fun gamesIn(path: String) =
+            library.games.count { game -> game.files.any { it.path.startsWith("$path/") } }
+
+        override fun setAutoDetectStorage(enabled: Boolean) {
+            viewModelScope.launch {
+                data?.settings?.setAutoDetectStorage(enabled)
+                refreshLibrary(force = true)
+            }
+        }
+
+        override fun addRoot(path: String) {
+            viewModelScope.launch {
+                data?.settings?.addScanRoot(path)
+                showToast("Added $path")
+                refreshLibrary(force = true)
+            }
+        }
+
+        override fun removeRoot(path: String) {
+            viewModelScope.launch {
+                data?.settings?.removeScanRoot(path)
+                showToast("Removed $path")
+                refreshLibrary(force = true)
+            }
+        }
+
+        override fun setCompanionEnabled(enabled: Boolean) {
+            this@AppViewModel.companionEnabled = enabled
+            viewModelScope.launch { data?.settings?.setCompanionEnabled(enabled) }
+            showToast(if (enabled) "Dual screen on" else "Dual screen off")
+        }
+
+        override fun rescan() = refreshLibrary(force = true)
+        override fun openDiagnostics() { onOpenDiagnostics?.invoke() }
+        override fun toast(message: String) = showToast(message)
+    })
+
+    /** Button legend for whatever is on screen. */
+    val hints: List<Pair<String, String>> get() = when {
+        menuOpen -> listOf("A" to "Select", "B" to "Close")
+        libraryState is LibraryState.NeedsPermission -> listOf("A" to "Open settings", "START" to "Menu")
+        detail != null -> listOf("A" to "Select", "B" to "Back", "Y" to "Favorite", "START" to "Menu")
+        tab == Tab.Settings -> settings.hints
+        else -> listOf("A" to "Select", "B" to "Back", "Y" to "Favorite", "START" to "Menu", "SELECT" to "Options")
+    }
 
     /** Card under the logical focus (or the open detail game); drives the companion screen. */
     val focusedCard: CardModel? get() {
@@ -142,16 +208,31 @@ class AppViewModel : ViewModel() {
             return
         }
         if (!force && libraryState is LibraryState.Ready) return
-        if (scanJob?.isActive == true) return
+        if (scanJob?.isActive == true) {
+            // Settings changed mid-scan: run once more with the new folders when this one ends.
+            if (force) rescanQueued = true
+            return
+        }
         libraryState = LibraryState.Scanning
         scanJob = viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) { scanner.scan(storageRoots()) }
+            val roots = scanRoots(data?.settings?.scanSettingsNow() ?: scanSettings)
+            val result = withContext(Dispatchers.IO) { scanner.scan(roots) }
             // The UI updates itself through the repository's flows once the sync commits.
-            val summary = repository?.sync(result.library.games)
+            val summary = data?.library?.sync(result.library.games)
             libraryState = LibraryState.Ready(result.stats)
             val news = summary?.added?.takeIf { it > 0 }?.let { ", $it new" }.orEmpty()
             showToast("${result.stats.games} games found$news (${result.stats.durationMs} ms)")
+            if (rescanQueued) {
+                rescanQueued = false
+                refreshLibrary(force = true)
+            }
         }
+    }
+
+    /** Auto-detected volumes (unless turned off) plus the folders added by hand. */
+    private fun scanRoots(settings: ScanSettings): List<File> {
+        val auto = if (settings.autoDetectStorage) storageRoots() else emptyList()
+        return (auto + settings.customRoots.map(::File)).distinct()
     }
 
     val focusedRow: Int get() = (rowFocus[tab] ?: 0).coerceIn(0, (rows.size - 1).coerceAtLeast(0))
@@ -162,7 +243,7 @@ class AppViewModel : ViewModel() {
     private fun itemKey(tab: Tab, row: RowModel) = "${tab.name}/${row.id}"
 
     private fun buildRows(tab: Tab): List<RowModel> {
-        if (library.games.isEmpty()) return emptyList()
+        if (tab == Tab.Settings || library.games.isEmpty()) return emptyList()
         fun gameCards(games: List<Game>) = games.map { CardModel.GameCard(it, library.system(it.systemId)) }
         return when (tab) {
             Tab.Home -> buildList {
@@ -184,6 +265,7 @@ class AppViewModel : ViewModel() {
             Tab.Favorites -> favoriteGames().chunked(6).mapIndexed { i, chunk ->
                 RowModel("fav-$i", if (i == 0) "Favorites" else "", gameCards(chunk))
             }
+            Tab.Settings -> emptyList()
         }
     }
 
@@ -194,6 +276,7 @@ class AppViewModel : ViewModel() {
             menuOpen -> handleMenu(action)
             libraryState is LibraryState.NeedsPermission -> handlePermission(action)
             detail != null -> handleDetail(action)
+            tab == Tab.Settings -> handleSettings(action)
             else -> handleBrowse(action)
         }
     }
@@ -230,6 +313,17 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    private fun handleSettings(action: GamepadAction) {
+        if (settings.handle(action)) return
+        when (action) {
+            GamepadAction.TabLeft -> if (settings.page == com.thorium.app.ui.settings.SettingsPage.Main) switchTab(-1)
+            GamepadAction.TabRight -> if (settings.page == com.thorium.app.ui.settings.SettingsPage.Main) switchTab(+1)
+            GamepadAction.Back -> tab = Tab.Home
+            GamepadAction.Menu -> openMenu()
+            else -> Unit
+        }
+    }
+
     private fun handleDetail(action: GamepadAction) {
         val game = detail ?: return
         when (action) {
@@ -251,12 +345,10 @@ class AppViewModel : ViewModel() {
             GamepadAction.Select -> {
                 when (MENU_ITEMS[menuIndex]) {
                     "Rescan library" -> refreshLibrary(force = true)
-                    "Dual screen" -> {
-                        companionEnabled = !companionEnabled
-                        showToast(if (companionEnabled) "Dual screen on" else "Dual screen off")
+                    "Settings" -> {
+                        settings.reset()
+                        tab = Tab.Settings
                     }
-                    "Diagnostics" -> onOpenDiagnostics?.invoke()
-                    "About" -> showToast("Thorium 0.0.1 - Phase 4 UI prototype")
                 }
                 menuOpen = false
             }
@@ -298,7 +390,7 @@ class AppViewModel : ViewModel() {
 
     private fun toggleFavorite(game: Game) {
         val makeFavorite = game.id !in favorites
-        viewModelScope.launch { repository?.setFavorite(game.id, makeFavorite) }
+        viewModelScope.launch { data?.library?.setFavorite(game.id, makeFavorite) }
         showToast(if (makeFavorite) "Added to Favorites" else "Removed from Favorites")
     }
 

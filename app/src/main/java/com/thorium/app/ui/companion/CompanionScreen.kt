@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thorium.app.ui.main.AppViewModel
 import com.thorium.app.ui.main.CardModel
+import com.thorium.app.ui.main.Tab
 import com.thorium.app.ui.main.gameCountLabel
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
@@ -35,7 +36,7 @@ fun CompanionScreen(vm: AppViewModel) {
         when (val card = vm.focusedCard) {
             is CardModel.GameCard -> GameInfo(card.game, card.system, vm.isFavorite(card.game.id))
             is CardModel.SystemCard -> SystemInfo(card.system, card.gameCount)
-            null -> Idle()
+            null -> Idle(settings = vm.tab == Tab.Settings)
         }
     }
 }
@@ -83,10 +84,13 @@ private fun SystemInfo(system: GameSystem, gameCount: Int) {
 }
 
 @Composable
-private fun Idle() {
+private fun Idle(settings: Boolean) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Thorium", color = Palette.TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Text("Select a game on the top screen", color = Palette.TextSecondary, fontSize = 13.sp)
+        Text(
+            if (settings) "Settings are on the top screen" else "Select a game on the top screen",
+            color = Palette.TextSecondary, fontSize = 13.sp,
+        )
     }
 }
 

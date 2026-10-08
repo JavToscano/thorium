@@ -1,7 +1,5 @@
 package com.thorium.data.db
 
-import android.content.Context
-import androidx.room.Room
 import androidx.room.withTransaction
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameFile
@@ -11,7 +9,12 @@ import kotlinx.coroutines.flow.map
 data class SyncSummary(val added: Int, val updated: Int, val missing: Int)
 
 /** The only entry point to persistence; no Room type leaks out of this module. */
-class LibraryRepository private constructor(private val db: ThoriumDatabase) {
+class LibraryRepository internal constructor(private val db: ThoriumDatabase) {
+
+    private companion object {
+        // SQLite limits the number of bound variables per statement.
+        const val CHUNK = 400
+    }
 
     private val dao = db.libraryDao()
 
@@ -40,16 +43,6 @@ class LibraryRepository private constructor(private val db: ThoriumDatabase) {
             plan.missingIds.chunked(CHUNK).forEach { dao.markMissing(it) }
             SyncSummary(plan.added, plan.updated, plan.missingIds.size)
         }
-
-    companion object {
-        // SQLite limits the number of bound variables per statement.
-        private const val CHUNK = 400
-
-        fun create(context: Context): LibraryRepository =
-            LibraryRepository(
-                Room.databaseBuilder(context.applicationContext, ThoriumDatabase::class.java, "thorium.db").build()
-            )
-    }
 }
 
 private fun GameWithFiles.toGame(): Game? {

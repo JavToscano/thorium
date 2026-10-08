@@ -52,6 +52,20 @@ data class FavoriteEntity(
     val addedAt: Long,
 )
 
+/** A folder the user added by hand to be scanned, in addition to the auto-detected storage. */
+@Entity(tableName = "scan_roots")
+data class ScanRootEntity(
+    @PrimaryKey val path: String,
+    val addedAt: Long,
+)
+
+/** Simple key/value preferences (booleans stored as "1" / "0"). */
+@Entity(tableName = "settings")
+data class SettingEntity(
+    @PrimaryKey val key: String,
+    val value: String,
+)
+
 data class GameWithFiles(
     @Embedded val game: GameEntity,
     @Relation(parentColumn = "id", entityColumn = "gameId") val files: List<GameFileEntity>,

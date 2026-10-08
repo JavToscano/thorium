@@ -29,13 +29,23 @@ class LibraryScanner(private val catalog: PlatformCatalog = PlatformCatalog.Defa
 
     private var visited = 0
     private var ignored = 0
+    private val seenPaths = HashSet<String>()
 
     fun scan(roots: List<File>, maxDepth: Int = 4): ScanResult {
         val start = System.currentTimeMillis()
         visited = 0
         ignored = 0
+        seenPaths.clear()
         val candidates = mutableListOf<Candidate>()
-        roots.filter { it.isDirectory }.forEach { collectFromContainer(it, 0, maxDepth, candidates) }
+        roots.filter { it.isDirectory }.forEach { root ->
+            // A root can itself be a platform folder (e.g. a folder the user picked by hand).
+            val platform = catalog.forFolder(root.name)
+            if (platform != null) {
+                collectFromPlatformDir(root, platform, 0, maxDepth, candidates)
+            } else {
+                collectFromContainer(root, 0, maxDepth, candidates)
+            }
+        }
         val games = buildGames(candidates)
         val systems = catalog.platforms.map { it.system }.filter { s -> games.any { it.systemId == s.id } }
         val library = Library(systems, games)
@@ -74,6 +84,8 @@ class LibraryScanner(private val catalog: PlatformCatalog = PlatformCatalog.Defa
                 if (depth < maxDepth) collectFromPlatformDir(child, platform, depth + 1, maxDepth, out)
                 continue
             }
+            // Overlapping roots (auto-detected volume plus a hand-picked folder) must not count a file twice.
+            if (!seenPaths.add(child.absolutePath)) continue
             visited++
             val ext = child.extension.lowercase()
             val isArchive = ext in platform.archiveExtensions

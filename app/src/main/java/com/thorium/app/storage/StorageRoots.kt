@@ -6,22 +6,32 @@ import android.os.Environment
 import android.os.storage.StorageManager
 import java.io.File
 
+/** A mounted storage volume with the name the system shows to the user. */
+data class StorageVolumeInfo(val dir: File, val label: String)
+
 /** Discovers mounted storage volumes (internal storage and SD cards) to scan for games. */
 object StorageRoots {
 
-    fun detect(context: Context): List<File> {
+    fun volumes(context: Context): List<StorageVolumeInfo> {
         val manager = context.getSystemService(StorageManager::class.java)
-        val volumes = manager.storageVolumes
+        return manager.storageVolumes
             .filter { it.state == Environment.MEDIA_MOUNTED }
             .mapNotNull { volume ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val dir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     volume.directory
                 } else if (volume.isPrimary) {
                     Environment.getExternalStorageDirectory()
                 } else {
                     null
                 }
+                dir?.let {
+                    val name = volume.getDescription(context) ?: it.name
+                    // A card is often labelled with whatever its owner formatted it as ("3DS").
+                    StorageVolumeInfo(it, if (volume.isPrimary) name else "SD card ($name)")
+                }
             }
-        return volumes.distinct()
+            .distinctBy { it.dir }
     }
+
+    fun detect(context: Context): List<File> = volumes(context).map { it.dir }
 }
