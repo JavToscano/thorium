@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thorium.app.R
+import com.thorium.app.art.rememberCoverArt
 import com.thorium.app.ui.downloads.DownloadsScreen
 import com.thorium.app.ui.settings.SettingsScreen
 import com.thorium.core.model.Game
@@ -119,10 +120,10 @@ private fun DetailScreen(game: Game, vm: AppViewModel) {
             Modifier.align(Alignment.Center).padding(Dimens.ScreenPadding),
             horizontalArrangement = Arrangement.spacedBy(28.dp),
         ) {
-            Cover(game.title, system, focused = false, progress = game.progress, favorite = vm.isFavorite(game.id), width = 150.dp, height = 200.dp)
+            Cover(game.title, system, focused = false, progress = game.progress, favorite = vm.isFavorite(game.id), width = 150.dp, height = 200.dp, art = rememberCoverArt(vm.coverOf(game)))
             Column(Modifier.width(420.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(game.title, color = Palette.TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-                Text(system.name, color = Palette.Accent, fontSize = 15.sp)
+                Text(listOfNotNull(system.name, vm.matchOf(game)?.entry?.region).joinToString(" · "), color = Palette.Accent, fontSize = 15.sp)
                 Text(formatSize(game.sizeBytes), color = Palette.TextSecondary, fontSize = 13.sp)
                 Text(game.path, color = Palette.TextSecondary, fontSize = 12.sp)
                 Text(

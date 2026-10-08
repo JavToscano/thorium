@@ -17,10 +17,12 @@ import com.thorium.app.downloads.DownloadService
 import com.thorium.app.storage.StoragePermission
 import com.thorium.app.storage.StorageRoots
 import com.thorium.app.ui.main.AppViewModel
+import com.thorium.core.model.CoverArt
 import com.thorium.core.model.GameCatalog
 import com.thorium.data.db.ThoriumData
 import com.thorium.data.library.TitleNormalizer
 import com.thorium.data.metadata.BundledCatalog
+import com.thorium.data.metadata.LibretroCovers
 
 /**
  * Owns the single [AppViewModel] shared by every activity (one per display), so the top and
@@ -37,10 +39,14 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
     /** The bundled metadata catalog; opened on first use. */
     val catalog: GameCatalog by lazy { BundledCatalog.open(this) { TitleNormalizer.parse(it).matchKey } }
 
+    /** Box art, downloaded on demand into the app's cache. */
+    val covers: CoverArt by lazy { LibretroCovers.create(java.io.File(cacheDir, "covers")) }
+
     val appViewModel: AppViewModel by lazy {
         ViewModelProvider(this)[AppViewModel::class.java].also {
             it.permissionGranted = StoragePermission::isGranted
             it.catalogProvider = { catalog }
+            it.coverProvider = { covers }
             it.storageRoots = { StorageRoots.detect(this) }
             it.storageVolumes = { StorageRoots.volumes(this) }
             val data = ThoriumData.create(this)

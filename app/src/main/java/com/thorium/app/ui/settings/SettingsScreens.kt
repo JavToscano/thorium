@@ -133,6 +133,10 @@ private fun MainPage(c: SettingsController) {
                     title, description, focused,
                     trailing = stringResource(if (c.companionOn) R.string.value_on else R.string.value_off),
                 )
+                SettingsItem.Covers -> ListRow(
+                    title, description, focused,
+                    trailing = stringResource(if (c.coversOn) R.string.value_on else R.string.value_off),
+                )
                 SettingsItem.Language -> ListRow(title, description, focused, trailing = languageName(c.languageChoice))
                 else -> ListRow(title, description, focused)
             }

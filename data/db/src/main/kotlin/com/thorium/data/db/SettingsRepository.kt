@@ -45,6 +45,11 @@ class SettingsRepository internal constructor(db: ThoriumDatabase) {
 
     suspend fun setCompanionEnabled(enabled: Boolean) = setBoolean(KEY_COMPANION, enabled)
 
+    /** Whether covers are downloaded from the internet; on by default. */
+    suspend fun isCoversEnabled(): Boolean = dao.getSetting(KEY_COVERS)?.let(::parseBoolean) ?: true
+
+    suspend fun setCoversEnabled(enabled: Boolean) = setBoolean(KEY_COVERS, enabled)
+
     private suspend fun setBoolean(key: String, value: Boolean) =
         dao.upsertSetting(SettingEntity(key, if (value) "1" else "0"))
 
@@ -53,5 +58,6 @@ class SettingsRepository internal constructor(db: ThoriumDatabase) {
     private companion object {
         const val KEY_AUTO_DETECT = "autoDetectStorage"
         const val KEY_COMPANION = "companionEnabled"
+        const val KEY_COVERS = "coversEnabled"
     }
 }

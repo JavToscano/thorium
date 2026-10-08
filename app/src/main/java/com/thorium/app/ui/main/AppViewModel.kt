@@ -149,6 +149,18 @@ class AppViewModel : ViewModel() {
     /** Wired by the application: storage permission check and the folders to scan. */
     var permissionGranted: () -> Boolean = { true }
 
+    /** Cover downloads; set by the application, like [catalogProvider]. */
+    var coverProvider: () -> com.thorium.core.model.CoverArt? = { null }
+
+    /** User preference (persisted): download covers from the internet. */
+    var coversEnabled by mutableStateOf(true); private set
+
+    /** What the catalog recognised for each game and the covers found so far. */
+    val gameArt = com.thorium.app.art.GameArt(viewModelScope, { catalogProvider() }, { coverProvider() })
+
+    fun matchOf(game: Game): com.thorium.core.model.CatalogMatch? = gameArt.matches[game.id]
+    fun coverOf(game: Game): java.io.File? = gameArt.coverFiles[game.id]
+
     /** The bundled game catalog; opened on first use, so call it off the main thread. */
     var catalogProvider: () -> com.thorium.core.model.GameCatalog? = { null }
     var storageRoots: () -> List<File> = { emptyList() }
@@ -165,8 +177,13 @@ class AppViewModel : ViewModel() {
         this.data = data
         // Read once up front so a disabled companion never flashes open at launch.
         companionEnabled = runBlocking { data.settings.isCompanionEnabled() }
+        coversEnabled = runBlocking { data.settings.isCoversEnabled() }
+        gameArt.setDownloadEnabled(coversEnabled)
         viewModelScope.launch {
-            data.library.observeGames().collect { games -> library = buildLibrary(games) }
+            data.library.observeGames().collect { games ->
+                library = buildLibrary(games)
+                gameArt.update(games)
+            }
         }
         viewModelScope.launch {
             data.library.observeFavoriteIds().collect { favorites = it }
@@ -214,6 +231,12 @@ class AppViewModel : ViewModel() {
         override val autoDetectStorage get() = scanSettings.autoDetectStorage
         override val customRoots get() = scanSettings.customRoots
         override val companionEnabled get() = this@AppViewModel.companionEnabled
+        override val coversEnabled get() = this@AppViewModel.coversEnabled
+        override fun setCoversEnabled(enabled: Boolean) {
+            this@AppViewModel.coversEnabled = enabled
+            gameArt.setDownloadEnabled(enabled)
+            viewModelScope.launch { data?.settings?.setCoversEnabled(enabled) }
+        }
         override fun volumes() = storageVolumes()
         override fun gamesIn(path: String) =
             library.games.count { game -> game.files.any { it.path.startsWith("$path/") } }

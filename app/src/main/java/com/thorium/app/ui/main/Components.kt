@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.thorium.app.R
+import com.thorium.app.art.rememberCoverArt
 import com.thorium.core.ui.components.Cover
 import com.thorium.core.ui.components.focusBorder
 import com.thorium.core.ui.components.focusScale
@@ -73,6 +74,7 @@ fun CardRow(row: RowModel, rowFocused: Boolean, itemIndex: Int, vm: AppViewModel
                         focused = focused,
                         progress = card.game.progress,
                         favorite = vm.isFavorite(card.game.id),
+                        art = rememberCoverArt(vm.coverOf(card.game)),
                     )
                     is CardModel.SystemCard -> SystemTile(card, focused)
                 }

@@ -29,3 +29,12 @@ interface GameCatalog {
      */
     fun identify(fileName: String, platformId: String? = null, crc32: Long? = null): CatalogMatch?
 }
+
+/** Cover art for recognised games. Images are fetched on demand and kept on disk. */
+interface CoverArt {
+    /** The cover when it is already on disk; never touches the network. */
+    fun cached(entry: CatalogEntry): java.io.File?
+
+    /** Downloads the cover if needed. Null when there is none or it could not be fetched now. */
+    suspend fun fetch(entry: CatalogEntry): java.io.File?
+}

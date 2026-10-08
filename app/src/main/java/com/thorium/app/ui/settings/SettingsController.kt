@@ -31,6 +31,7 @@ enum class SettingsItem(@StringRes val title: Int, @StringRes val description: I
     Folders(R.string.settings_folders_title, R.string.settings_folders_desc),
     Sources(R.string.settings_sources_title, R.string.settings_sources_desc),
     DualScreen(R.string.settings_dual_title, R.string.settings_dual_desc),
+    Covers(R.string.settings_covers_title, R.string.settings_covers_desc),
     Language(R.string.settings_language_title, R.string.settings_language_desc),
     Rescan(R.string.settings_rescan_title, null),
     About(R.string.settings_about_title, R.string.settings_about_desc),
@@ -44,6 +45,8 @@ interface SettingsHost : SourcesHost {
     val autoDetectStorage: Boolean
     val customRoots: List<String>
     val companionEnabled: Boolean
+    val coversEnabled: Boolean
+    fun setCoversEnabled(enabled: Boolean)
     fun volumes(): List<StorageVolumeInfo>
     fun gamesIn(path: String): Int
     fun setAutoDetectStorage(enabled: Boolean)
@@ -92,6 +95,7 @@ class SettingsController(internal val host: SettingsHost) {
     var setupIndex by mutableIntStateOf(0); private set
 
     val companionOn: Boolean get() = host.companionEnabled
+    val coversOn: Boolean get() = host.coversEnabled
     val languageChoice: LanguageChoice get() = host.language?.current() ?: LanguageChoice.System
 
     /** Rows of the main page, in order; the Language row only exists when the system supports it. */
@@ -100,6 +104,7 @@ class SettingsController(internal val host: SettingsHost) {
             add(SettingsItem.Folders)
             add(SettingsItem.Sources)
             add(SettingsItem.DualScreen)
+            add(SettingsItem.Covers)
             if (host.language != null) add(SettingsItem.Language)
             add(SettingsItem.Rescan)
             add(SettingsItem.About)
@@ -169,6 +174,7 @@ class SettingsController(internal val host: SettingsHost) {
                 SettingsItem.Folders -> { page = SettingsPage.Folders; foldersIndex = 0 }
                 SettingsItem.Sources -> page = SettingsPage.Sources
                 SettingsItem.DualScreen -> host.setCompanionEnabled(!host.companionEnabled)
+                SettingsItem.Covers -> host.setCoversEnabled(!host.coversEnabled)
                 SettingsItem.Language -> host.cycleLanguage()
                 SettingsItem.Rescan -> host.rescan()
                 SettingsItem.About -> { page = SettingsPage.About; aboutIndex = 0 }

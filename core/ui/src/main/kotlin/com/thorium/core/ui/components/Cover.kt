@@ -1,8 +1,10 @@
 package com.thorium.core.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +20,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,6 +49,8 @@ fun Cover(
     favorite: Boolean = false,
     width: Dp = Dimens.CardWidth,
     height: Dp = Dimens.CardHeight,
+    /** The real cover when there is one; replaces the placeholder badge and title. */
+    art: ImageBitmap? = null,
 ) {
     val scale = focusScale(focused)
     val border = focusBorder(focused)
@@ -57,26 +63,37 @@ fun Cover(
             .background(Brush.verticalGradient(systemColors(system.hue)))
             .border(3.dp, border, RoundedCornerShape(10.dp))
     ) {
-        Text(
-            system.shortName,
-            modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
-            color = Color.White.copy(alpha = 0.85f),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        if (art != null) {
+            // Whole cover, never cropped: box art comes in different shapes.
+            Image(
+                art, contentDescription = title,
+                modifier = Modifier.fillMaxSize().background(Palette.Panel),
+                contentScale = ContentScale.Fit,
+            )
+        } else {
+            Text(
+                system.shortName,
+                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
         if (favorite) {
             Text("★", modifier = Modifier.align(Alignment.TopEnd).padding(8.dp), color = Color(0xFFFFD54F), fontSize = 14.sp)
         }
-        Text(
-            title,
-            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth()
-                .background(Color.Black.copy(alpha = 0.45f))
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            color = Color.White,
-            fontSize = 12.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (art == null) {
+            Text(
+                title,
+                modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.45f))
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                color = Color.White,
+                fontSize = 12.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (progress != null) {
             Box(
                 Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp)

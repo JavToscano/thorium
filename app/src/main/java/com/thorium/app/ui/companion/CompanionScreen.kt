@@ -25,6 +25,7 @@ import com.thorium.app.ui.main.AppViewModel
 import com.thorium.app.ui.main.CardModel
 import com.thorium.app.ui.main.Tab
 import com.thorium.app.R
+import com.thorium.app.art.rememberCoverArt
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
 import com.thorium.core.ui.components.Cover
@@ -42,7 +43,10 @@ fun CompanionScreen(vm: AppViewModel) {
             val strip: (@Composable () -> Unit)? = vm.unfinishedDownloads.takeIf { it.isNotEmpty() }
                 ?.let { active -> { DownloadsStrip(active, vm.downloadSpeeds) } }
             when (val card = vm.focusedCard) {
-                is CardModel.GameCard -> GameInfo(card.game, card.system, vm.isFavorite(card.game.id), strip)
+                is CardModel.GameCard -> GameInfo(
+                    card.game, card.system, vm.isFavorite(card.game.id),
+                    rememberCoverArt(vm.coverOf(card.game)), vm.matchOf(card.game)?.entry?.region, strip,
+                )
                 is CardModel.SystemCard -> SystemInfo(card.system, card.gameCount, strip)
                 null -> Idle(settings = vm.tab == Tab.Settings, strip = strip)
             }
@@ -51,13 +55,17 @@ fun CompanionScreen(vm: AppViewModel) {
 }
 
 @Composable
-private fun GameInfo(game: Game, system: GameSystem, favorite: Boolean, strip: (@Composable () -> Unit)?) {
+private fun GameInfo(
+    game: Game, system: GameSystem, favorite: Boolean,
+    art: androidx.compose.ui.graphics.ImageBitmap?, region: String?,
+    strip: (@Composable () -> Unit)?,
+) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Cover(game.title, system, focused = false, progress = game.progress, favorite = favorite, width = 120.dp, height = 160.dp)
+            Cover(game.title, system, focused = false, progress = game.progress, favorite = favorite, width = 120.dp, height = 160.dp, art = art)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(game.title, color = Palette.TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(system.name, color = Palette.Accent, fontSize = 14.sp)
+                Text(listOfNotNull(system.name, region).joinToString(" · "), color = Palette.Accent, fontSize = 14.sp)
                 Text(formatSize(game.sizeBytes), color = Palette.TextSecondary, fontSize = 12.sp)
                 Text(
                     game.progress?.let { stringResource(R.string.detail_progress, (it * 100).toInt()) }

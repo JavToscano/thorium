@@ -83,6 +83,8 @@ androidComponents {
 
 dependencies {
     implementation(project(":core:model"))
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(project(":core:model"))
     testImplementation(platform(libs.junit.bom))
