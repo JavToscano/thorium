@@ -28,8 +28,12 @@ class LibraryRepository internal constructor(private val db: ThoriumDatabase) {
         if (favorite) dao.upsertFavorite(FavoriteEntity(gameId, now)) else dao.deleteFavorite(gameId)
     }
 
-    /** Merges a fresh scan into the database in one transaction. */
-    suspend fun sync(scanned: List<Game>, now: Long = System.currentTimeMillis()): SyncSummary =
+    /**
+     * Merges a fresh scan into the database in one transaction. With [markMissing] off the scan is
+     * treated as partial (for example one console folder after an install): games it did not see
+     * are left alone instead of being flagged as gone.
+     */
+    suspend fun sync(scanned: List<Game>, markMissing: Boolean = true, now: Long = System.currentTimeMillis()): SyncSummary =
         db.withTransaction {
             val plan = SyncPlanner.plan(
                 stored = dao.allGames().map { StoredGame(it.id, it.addedAt, it.missing) },
@@ -40,8 +44,9 @@ class LibraryRepository internal constructor(private val db: ThoriumDatabase) {
             scanned.map { it.id }.chunked(CHUNK).forEach { dao.deleteFilesOf(it) }
             scanned.flatMap { game -> game.files.map { it.toEntity(game.id) } }
                 .chunked(CHUNK).forEach { dao.insertFiles(it) }
-            plan.missingIds.chunked(CHUNK).forEach { dao.markMissing(it) }
-            SyncSummary(plan.added, plan.updated, plan.missingIds.size)
+            val missing = if (markMissing) plan.missingIds else emptyList()
+            missing.chunked(CHUNK).forEach { dao.markMissing(it) }
+            SyncSummary(plan.added, plan.updated, missing.size)
         }
 }
 
