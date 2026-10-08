@@ -84,6 +84,29 @@ data class SourceEntity(
     val lastCheckedAt: Long?,
 )
 
+/** One entry of the download queue; mirrors [com.thorium.core.model.DownloadItem]. */
+@Entity(tableName = "downloads")
+data class DownloadEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val sourceId: Long,
+    val title: String,
+    val entryName: String,
+    val entryRef: String,
+    val platformId: String,
+    val destinationDir: String,
+    val workDir: String,
+    val sizeBytes: Long?,
+    val sha1: String?,
+    /** [com.thorium.core.model.DownloadState] name. */
+    val state: String,
+    val bytesDone: Long,
+    /** [com.thorium.core.model.DownloadError] name, or null. */
+    val error: String?,
+    val retries: Int,
+    val createdAt: Long,
+    val installedPath: String?,
+)
+
 data class GameWithFiles(
     @Embedded val game: GameEntity,
     @Relation(parentColumn = "id", entityColumn = "gameId") val files: List<GameFileEntity>,

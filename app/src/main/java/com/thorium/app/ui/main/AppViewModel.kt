@@ -10,12 +10,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
+import com.thorium.core.model.RemoteEntry
 import com.thorium.core.model.Library
 import com.thorium.core.model.SourceConfig
 import com.thorium.core.model.SourceException
 import com.thorium.app.R
 import com.thorium.app.storage.StorageVolumeInfo
+import com.thorium.app.ui.settings.BrowseHost
+import com.thorium.app.ui.settings.DownloadStart
 import com.thorium.app.ui.settings.SettingsController
+import com.thorium.app.ui.settings.SourceErrors
 import com.thorium.app.ui.settings.SourceDraft
 import com.thorium.app.ui.settings.TestResult
 import com.thorium.app.ui.settings.SettingsHost
@@ -39,6 +43,7 @@ enum class Tab(@StringRes val title: Int) {
     Home(R.string.tab_home),
     Systems(R.string.tab_systems),
     Favorites(R.string.tab_favorites),
+    Downloads(R.string.tab_downloads),
     Settings(R.string.tab_settings),
 }
 
@@ -106,6 +111,29 @@ class AppViewModel : ViewModel() {
     private var rescanQueued = false
 
     var libraryState by mutableStateOf<LibraryState>(LibraryState.Scanning); private set
+
+    /** The download queue as shown in the Downloads tab (finished items last). */
+    var downloadItems by mutableStateOf<List<com.thorium.core.model.DownloadItem>>(emptyList()); private set
+    var downloadIndex by mutableIntStateOf(0); private set
+
+    /** Set by the application once the download queue exists; starts mirroring its items. */
+    var downloads: com.thorium.app.downloads.DownloadManager? = null
+        set(value) {
+            field = value
+            if (value != null) {
+                viewModelScope.launch {
+                    value.items.collect { all ->
+                        downloadItems = all.sortedWith(compareBy({ it.state.isFinished }, { -it.id }))
+                    }
+                }
+            }
+        }
+
+    /** Called after the first queued download so the app can ask for the notification permission. */
+    var onDownloadQueued: (() -> Unit)? = null
+
+    /** Game folders right now: auto-detected storage (if enabled) plus the ones added by hand. */
+    suspend fun currentScanRoots(): List<File> = scanRoots(data?.settings?.scanSettingsNow() ?: scanSettings)
 
     /** Wired by the application: storage permission check and the folders to scan. */
     var permissionGranted: () -> Boolean = { true }
@@ -211,6 +239,34 @@ class AppViewModel : ViewModel() {
 
         override val sources get() = sourceList
 
+        override val platforms: List<GameSystem> get() = PlatformCatalog.Default.platforms.map { it.system }
+
+        override fun list(source: SourceConfig, ref: String?, onResult: (Result<List<RemoteEntry>>) -> Unit) {
+            viewModelScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val password = data?.sources?.password(source.id).orEmpty()
+                        SourceFactory.create(source, password).list(ref)
+                    }
+                }
+                onResult(result)
+            }
+        }
+
+        override fun download(source: SourceConfig, entry: RemoteEntry, platformId: String?, onResult: (DownloadStart) -> Unit) {
+            val manager = downloads ?: return
+            viewModelScope.launch {
+                val platform = platformId?.let { id -> PlatformCatalog.Default.platforms.firstOrNull { it.id == id } }
+                val start = when (manager.request(source, entry, platform)) {
+                    is com.thorium.app.downloads.DownloadRequest.Queued -> DownloadStart.Queued
+                    com.thorium.app.downloads.DownloadRequest.NeedsPlatform -> DownloadStart.NeedsPlatform
+                    com.thorium.app.downloads.DownloadRequest.NoFolder -> DownloadStart.NoFolder
+                }
+                if (start == DownloadStart.Queued) onDownloadQueued?.invoke()
+                onResult(start)
+            }
+        }
+
         override fun saveSource(draft: SourceDraft, verified: Boolean) {
             viewModelScope.launch {
                 val id = data?.sources?.save(draft.toConfig(), draft.password)
@@ -234,9 +290,9 @@ class AppViewModel : ViewModel() {
                         // An existing source keeps its stored password unless a new one was typed.
                         val password = draft.password ?: if (draft.id != 0L) repository?.password(draft.id).orEmpty() else ""
                         SourceFactory.create(draft.toConfig(), password).testConnection()
-                            .fold({ TestResult.Ok }, { TestResult.Failed(explain(it)) })
+                            .fold({ TestResult.Ok }, { TestResult.Failed(SourceErrors.explain(it)) })
                     } catch (e: SourceException) {
-                        TestResult.Failed(explain(e))
+                        TestResult.Failed(SourceErrors.explain(e))
                     }
                 }
                 onResult(result)
@@ -246,13 +302,21 @@ class AppViewModel : ViewModel() {
         override fun cycleLanguage() { languageController?.cycle() }
     })
 
-    private fun explain(error: Throwable): UiText = when (error) {
-        is SourceException.Unauthorized -> UiText.res(R.string.test_err_auth)
-        is SourceException.NotFound -> UiText.res(R.string.test_err_not_found)
-        is SourceException.InsecureConnection -> UiText.res(R.string.test_err_insecure)
-        is SourceException.InvalidLocation -> UiText.res(R.string.test_err_invalid, error.message.orEmpty())
-        is SourceException.Network -> UiText.res(R.string.test_err_network)
-        else -> UiText.res(R.string.test_err_bad)
+    private fun downloadHints(): List<Hint> {
+        val item = downloadItems.getOrNull(downloadIndex)
+        val main = when (item?.state) {
+            com.thorium.core.model.DownloadState.Paused -> Hint("A", R.string.hint_resume)
+            com.thorium.core.model.DownloadState.Failed -> Hint("A", R.string.hint_retry)
+            null, com.thorium.core.model.DownloadState.Completed, com.thorium.core.model.DownloadState.Cancelled -> Hint("A", R.string.hint_select)
+            else -> Hint("A", R.string.hint_pause)
+        }
+        return listOf(
+            main,
+            Hint("Y", if (item?.state?.isFinished == true) R.string.hint_remove else R.string.hint_cancel),
+            Hint("SELECT", R.string.hint_clear),
+            Hint("L1/R1", R.string.hint_tabs),
+            Hint("START", R.string.hint_menu),
+        )
     }
 
     /** Button legend for whatever is on screen. */
@@ -265,6 +329,7 @@ class AppViewModel : ViewModel() {
             Hint("Y", R.string.hint_favorite), Hint("START", R.string.hint_menu),
         )
         tab == Tab.Settings -> settings.hints
+        tab == Tab.Downloads -> downloadHints()
         else -> listOf(
             Hint("A", R.string.hint_select), Hint("B", R.string.hint_back), Hint("Y", R.string.hint_favorite),
             Hint("START", R.string.hint_menu), Hint("SELECT", R.string.hint_options),
@@ -342,7 +407,7 @@ class AppViewModel : ViewModel() {
     private fun itemKey(tab: Tab, row: RowModel) = "${tab.name}/${row.id}"
 
     private fun buildRows(tab: Tab): List<RowModel> {
-        if (tab == Tab.Settings || library.games.isEmpty()) return emptyList()
+        if (tab == Tab.Settings || tab == Tab.Downloads || library.games.isEmpty()) return emptyList()
         fun gameCards(games: List<Game>) = games.map { CardModel.GameCard(it, library.system(it.systemId)) }
         return when (tab) {
             Tab.Home -> buildList {
@@ -364,7 +429,7 @@ class AppViewModel : ViewModel() {
             Tab.Favorites -> favoriteGames().chunked(6).mapIndexed { i, chunk ->
                 RowModel("fav-$i", if (i == 0) UiText.res(R.string.row_favorites) else null, gameCards(chunk))
             }
-            Tab.Settings -> emptyList()
+            Tab.Settings, Tab.Downloads -> emptyList()
         }
     }
 
@@ -377,6 +442,7 @@ class AppViewModel : ViewModel() {
             libraryState is LibraryState.NeedsPermission -> handlePermission(action)
             detail != null -> handleDetail(action)
             tab == Tab.Settings -> handleSettings(action)
+            tab == Tab.Downloads -> handleDownloads(action)
             else -> handleBrowse(action)
         }
     }
@@ -410,6 +476,31 @@ class AppViewModel : ViewModel() {
             GamepadAction.Menu -> openMenu()
             GamepadAction.Favorite -> focusedGame()?.let { toggleFavorite(it) }
             GamepadAction.Secondary -> showToast(UiText.res(R.string.toast_secondary_soon))
+        }
+    }
+
+    private fun handleDownloads(action: GamepadAction) {
+        val items = downloadItems
+        downloadIndex = downloadIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
+        val item = items.getOrNull(downloadIndex)
+        val manager = downloads
+        when (action) {
+            GamepadAction.Up -> downloadIndex = (downloadIndex - 1).coerceAtLeast(0)
+            GamepadAction.Down -> downloadIndex = (downloadIndex + 1).coerceAtMost((items.size - 1).coerceAtLeast(0))
+            GamepadAction.Select -> if (item != null && manager != null) when (item.state) {
+                com.thorium.core.model.DownloadState.Paused, com.thorium.core.model.DownloadState.Failed -> manager.resume(item.id)
+                com.thorium.core.model.DownloadState.Completed, com.thorium.core.model.DownloadState.Cancelled -> Unit
+                else -> manager.pause(item.id)
+            }
+            GamepadAction.Favorite -> if (item != null && manager != null) {
+                if (item.state.isFinished) manager.remove(item.id) else manager.cancel(item.id)
+            }
+            GamepadAction.Secondary -> manager?.clearFinished()
+            GamepadAction.TabLeft -> switchTab(-1)
+            GamepadAction.TabRight -> switchTab(+1)
+            GamepadAction.Back -> tab = Tab.Home
+            GamepadAction.Menu -> openMenu()
+            GamepadAction.Left, GamepadAction.Right -> Unit
         }
     }
 

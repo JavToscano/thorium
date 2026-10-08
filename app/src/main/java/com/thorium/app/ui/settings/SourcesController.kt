@@ -61,6 +61,7 @@ class SourcesController(
     private val host: SourcesHost,
     private val keyboard: KeyboardController,
     private val goTo: (SettingsPage) -> Unit,
+    private val onBrowse: (SourceConfig) -> Unit,
 ) {
     var listIndex by mutableIntStateOf(0); private set
     var formIndex by mutableIntStateOf(0); private set
@@ -86,7 +87,8 @@ class SourcesController(
 
     val listHints: List<Hint>
         get() = listOf(
-            Hint("A", R.string.hint_edit), Hint("Y", R.string.hint_remove), Hint("B", R.string.hint_back),
+            Hint("A", R.string.hint_open), Hint("SELECT", R.string.hint_edit),
+            Hint("Y", R.string.hint_remove), Hint("B", R.string.hint_back),
         )
 
     val formHints: List<Hint>
@@ -100,10 +102,12 @@ class SourcesController(
         when (action) {
             GamepadAction.Up -> listIndex = (listIndex - 1).coerceAtLeast(0)
             GamepadAction.Down -> listIndex = (listIndex + 1).coerceAtMost(listSize - 1)
+            // A browses a source; the "Add source" row opens an empty form; SELECT edits.
             GamepadAction.Select -> {
                 val source = host.sources.getOrNull(listIndex)
-                openForm(if (source != null) SourceDraft.from(source) else SourceDraft())
+                if (source != null) onBrowse(source) else openForm(SourceDraft())
             }
+            GamepadAction.Secondary -> host.sources.getOrNull(listIndex)?.let { openForm(SourceDraft.from(it)) }
             GamepadAction.Favorite -> host.sources.getOrNull(listIndex)?.let {
                 host.removeSource(it.id)
                 listIndex = (listIndex - 1).coerceAtLeast(0)

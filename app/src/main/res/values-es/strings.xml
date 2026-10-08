@@ -199,4 +199,56 @@
     <string name="toast_source_saved">Fuente guardada</string>
     <string name="toast_source_removed">Fuente eliminada</string>
     <string name="toast_source_needs_location">Escribe primero una dirección</string>
+
+    <!-- Notificación de descargas -->
+    <string name="notif_channel">Descargas</string>
+    <string name="notif_title">Descargando juegos</string>
+    <plurals name="notif_many">
+        <item quantity="one">%1$d descarga en curso</item>
+        <item quantity="many">%1$d descargas en curso</item>
+        <item quantity="other">%1$d descargas en curso</item>
+    </plurals>
+
+    <!-- Descargas -->
+    <string name="tab_downloads">Descargas</string>
+    <string name="dl_state_queued">En espera</string>
+    <string name="dl_state_downloading">Descargando</string>
+    <string name="dl_state_paused">En pausa</string>
+    <string name="dl_state_verifying">Verificando</string>
+    <string name="dl_state_extracting">Extrayendo</string>
+    <string name="dl_state_installing">Instalando</string>
+    <string name="dl_state_completed">Listo</string>
+    <string name="dl_state_failed">Falló</string>
+    <string name="dl_state_cancelled">Cancelada</string>
+    <string name="dl_err_network">Problema de conexión</string>
+    <string name="dl_err_unauthorized">Credenciales incorrectas o ausentes</string>
+    <string name="dl_err_not_found">Archivo no encontrado</string>
+    <string name="dl_err_insecure">HTTP sin cifrar no permitido para esta fuente</string>
+    <string name="dl_err_no_space">No hay espacio libre suficiente</string>
+    <string name="dl_err_verification">El archivo está dañado (la suma de verificación no coincide)</string>
+    <string name="dl_err_extraction">No se pudo extraer el archivo comprimido</string>
+    <string name="dl_err_storage">No se pudo guardar el juego en el almacenamiento</string>
+    <string name="dl_err_unknown">Error inesperado</string>
+    <string name="dl_empty">Aún no hay descargas. Abre una fuente en Ajustes → Fuentes para explorarla.</string>
+    <string name="dl_progress">%1$s · %2$s de %3$s</string>
+    <string name="dl_progress_unknown">%1$s · %2$s</string>
+    <string name="dl_installed_in">Instalado en %1$s</string>
+    <string name="hint_pause">Pausar</string>
+    <string name="hint_resume">Reanudar</string>
+    <string name="hint_retry">Reintentar</string>
+    <string name="hint_clear">Limpiar terminadas</string>
+    <string name="hint_download">Descargar</string>
+    <string name="hint_filter">Filtrar</string>
+
+    <!-- Explorar una fuente -->
+    <string name="browse_loading">Cargando…</string>
+    <string name="browse_empty">No hay nada aquí</string>
+    <string name="browse_no_match">Ningún nombre coincide con el filtro</string>
+    <string name="browse_filter_title">Filtrar por nombre</string>
+    <string name="browse_filtered">Filtro: %1$s</string>
+    <string name="browse_subtitle">A abre una carpeta o descarga un archivo. Los juegos se guardan en la carpeta de su consola.</string>
+    <string name="toast_download_added">Añadido a descargas: %1$s</string>
+    <string name="toast_download_no_folder">No hay una carpeta de juegos donde guardarlo. Añade una en Ajustes → Carpetas de juegos.</string>
+    <string name="platform_title">¿De qué consola es?</string>
+    <string name="platform_subtitle">%1$s · Thorium no pudo saber a qué consola pertenece. Se guardará en la carpeta de esa consola.</string>
 </resources>

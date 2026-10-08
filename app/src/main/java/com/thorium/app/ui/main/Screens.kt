@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thorium.app.R
+import com.thorium.app.ui.downloads.DownloadsScreen
 import com.thorium.app.ui.settings.SettingsScreen
 import com.thorium.core.model.Game
 import com.thorium.core.ui.components.ActionButton
@@ -54,6 +55,8 @@ fun ThoriumApp(vm: AppViewModel) {
                     PermissionScreen()
                 } else if (vm.tab == Tab.Settings) {
                     SettingsScreen(vm.settings)
+                } else if (vm.tab == Tab.Downloads) {
+                    DownloadsScreen(vm)
                 } else {
                     key(vm.tab) { RowsScreen(vm) }
                 }

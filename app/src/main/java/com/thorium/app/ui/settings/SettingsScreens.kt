@@ -43,6 +43,8 @@ fun SettingsScreen(controller: SettingsController) {
         SettingsPage.Setup -> SetupPage(controller)
         SettingsPage.Sources -> SourcesPage(controller)
         SettingsPage.SourceForm -> SourceFormPage(controller)
+        SettingsPage.Browse -> BrowsePage(controller)
+        SettingsPage.PlatformPick -> PlatformPickPage(controller)
     }
 }
 

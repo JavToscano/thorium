@@ -12,18 +12,22 @@ import androidx.room.RoomDatabase
         ScanRootEntity::class,
         SettingEntity::class,
         SourceEntity::class,
+        DownloadEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
     autoMigrations = [
         // v1 -> v2: adds scan_roots and settings (new tables only).
         AutoMigration(from = 1, to = 2),
         // v2 -> v3: adds sources (new table only).
         AutoMigration(from = 2, to = 3),
+        // v3 -> v4: adds downloads (new table only).
+        AutoMigration(from = 3, to = 4),
     ],
 )
 abstract class ThoriumDatabase : RoomDatabase() {
     abstract fun libraryDao(): LibraryDao
     abstract fun settingsDao(): SettingsDao
     abstract fun sourcesDao(): SourcesDao
+    abstract fun downloadsDao(): DownloadsDao
 }

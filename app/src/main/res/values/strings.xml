@@ -195,4 +195,55 @@
     <string name="toast_source_saved">Source saved</string>
     <string name="toast_source_removed">Source removed</string>
     <string name="toast_source_needs_location">Enter an address first</string>
+
+    <!-- Download notification -->
+    <string name="notif_channel">Downloads</string>
+    <string name="notif_title">Downloading games</string>
+    <plurals name="notif_many">
+        <item quantity="one">%1$d download in progress</item>
+        <item quantity="other">%1$d downloads in progress</item>
+    </plurals>
+
+    <!-- Downloads -->
+    <string name="tab_downloads">Downloads</string>
+    <string name="dl_state_queued">Waiting</string>
+    <string name="dl_state_downloading">Downloading</string>
+    <string name="dl_state_paused">Paused</string>
+    <string name="dl_state_verifying">Verifying</string>
+    <string name="dl_state_extracting">Extracting</string>
+    <string name="dl_state_installing">Installing</string>
+    <string name="dl_state_completed">Done</string>
+    <string name="dl_state_failed">Failed</string>
+    <string name="dl_state_cancelled">Cancelled</string>
+    <string name="dl_err_network">Connection problem</string>
+    <string name="dl_err_unauthorized">Wrong or missing credentials</string>
+    <string name="dl_err_not_found">File not found</string>
+    <string name="dl_err_insecure">Plain HTTP not allowed for this source</string>
+    <string name="dl_err_no_space">Not enough free space</string>
+    <string name="dl_err_verification">The file is corrupt (checksum mismatch)</string>
+    <string name="dl_err_extraction">Could not extract the archive</string>
+    <string name="dl_err_storage">Could not write the game to storage</string>
+    <string name="dl_err_unknown">Unexpected error</string>
+    <string name="dl_empty">No downloads yet. Open a source in Settings → Sources to browse it.</string>
+    <string name="dl_progress">%1$s · %2$s of %3$s</string>
+    <string name="dl_progress_unknown">%1$s · %2$s</string>
+    <string name="dl_installed_in">Installed in %1$s</string>
+    <string name="hint_pause">Pause</string>
+    <string name="hint_resume">Resume</string>
+    <string name="hint_retry">Retry</string>
+    <string name="hint_clear">Clear finished</string>
+    <string name="hint_download">Download</string>
+    <string name="hint_filter">Filter</string>
+
+    <!-- Browsing a source -->
+    <string name="browse_loading">Loading…</string>
+    <string name="browse_empty">Nothing here</string>
+    <string name="browse_no_match">No name matches the filter</string>
+    <string name="browse_filter_title">Filter by name</string>
+    <string name="browse_filtered">Filter: %1$s</string>
+    <string name="browse_subtitle">A opens a folder or downloads a file. Games are saved in the folder of their console.</string>
+    <string name="toast_download_added">Added to downloads: %1$s</string>
+    <string name="toast_download_no_folder">There is no game folder to save it in. Add one in Settings → Game folders.</string>
+    <string name="platform_title">Which console is this?</string>
+    <string name="platform_subtitle">%1$s · Thorium could not tell which console it belongs to. It will be saved in that console\'s folder.</string>
 </resources>

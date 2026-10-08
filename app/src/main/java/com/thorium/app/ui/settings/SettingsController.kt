@@ -17,7 +17,7 @@ import com.thorium.data.library.FolderInitializer
 import com.thorium.data.library.SetupEntry
 import java.io.File
 
-enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm }
+enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, Browse, PlatformPick }
 
 /** One selectable row of the "Game folders" page. */
 sealed interface FolderRow {
@@ -40,7 +40,7 @@ enum class SettingsItem(@StringRes val title: Int, @StringRes val description: I
 data class BrowserEntry(val label: String, val dir: File)
 
 /** What the settings screens need from the rest of the app. */
-interface SettingsHost : SourcesHost {
+interface SettingsHost : SourcesHost, BrowseHost {
     val autoDetectStorage: Boolean
     val customRoots: List<String>
     val companionEnabled: Boolean
@@ -71,7 +71,8 @@ class SettingsController(internal val host: SettingsHost) {
     val keyboard = KeyboardController()
 
     /** Sources list and add/edit form. */
-    internal val sourcesUi = SourcesController(host, keyboard) { page = it }
+    internal val browseUi = BrowseController(host, keyboard) { page = it }
+    internal val sourcesUi = SourcesController(host, keyboard, { page = it }, { browseUi.open(it) })
 
     var page by mutableStateOf(SettingsPage.Main); private set
     var mainIndex by mutableIntStateOf(0); private set
@@ -126,6 +127,8 @@ class SettingsController(internal val host: SettingsHost) {
             )
             SettingsPage.Sources -> sourcesUi.listHints
             SettingsPage.SourceForm -> sourcesUi.formHints
+            SettingsPage.Browse -> browseUi.hints
+            SettingsPage.PlatformPick -> browseUi.platformHints
         }
 
     private val keyboardHints = listOf(
@@ -146,6 +149,8 @@ class SettingsController(internal val host: SettingsHost) {
         SettingsPage.Setup -> handleSetup(action)
         SettingsPage.Sources -> sourcesUi.handleList(action)
         SettingsPage.SourceForm -> sourcesUi.handleForm(action)
+        SettingsPage.Browse -> browseUi.handle(action)
+        SettingsPage.PlatformPick -> browseUi.handlePlatform(action)
     }
 
     private fun handleMain(action: GamepadAction): Boolean {

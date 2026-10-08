@@ -30,6 +30,8 @@ class SourcesRepository internal constructor(db: ThoriumDatabase, private val se
         return existing.id
     }
 
+    suspend fun config(id: Long): SourceConfig? = dao.get(id)?.toConfig()
+
     suspend fun remove(id: Long) = dao.delete(id)
 
     /** The stored password, or an empty string when there is none or it can no longer be decrypted. */

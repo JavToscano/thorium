@@ -1,5 +1,8 @@
 package com.thorium.app.ui.main
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
@@ -15,6 +18,10 @@ import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
+    private companion object {
+        const val REQUEST_NOTIFICATIONS = 42
+    }
+
     private val vm: AppViewModel by lazy { (application as ThoriumApplication).appViewModel }
 
     private val displays by lazy {
@@ -25,6 +32,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         vm.markMainOpen()
         vm.onRequestStoragePermission = { StoragePermission.openSettings(this) }
+        vm.onDownloadQueued = ::askForNotifications
         setContent {
             ThoriumTheme {
                 // Re-evaluated whenever the user toggles "Dual screen" in the menu.
@@ -61,7 +69,17 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         vm.onRequestStoragePermission = null
+        vm.onDownloadQueued = null
         if (isFinishing) vm.markMainClosed()
+    }
+
+    /** Android 13+ needs a runtime permission to show the download notification; the download works either way. */
+    private fun askForNotifications() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+        }
     }
 
     private fun launchCompanionIfWanted() {
