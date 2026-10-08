@@ -17,7 +17,10 @@ import com.thorium.app.downloads.DownloadService
 import com.thorium.app.storage.StoragePermission
 import com.thorium.app.storage.StorageRoots
 import com.thorium.app.ui.main.AppViewModel
+import com.thorium.core.model.GameCatalog
 import com.thorium.data.db.ThoriumData
+import com.thorium.data.library.TitleNormalizer
+import com.thorium.data.metadata.BundledCatalog
 
 /**
  * Owns the single [AppViewModel] shared by every activity (one per display), so the top and
@@ -30,6 +33,9 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
     /** The download queue, created together with the view model. */
     var downloads: DownloadManager? = null
         private set
+
+    /** The bundled metadata catalog; opened on first use. */
+    val catalog: GameCatalog by lazy { BundledCatalog.open(this) { TitleNormalizer.parse(it).matchKey } }
 
     val appViewModel: AppViewModel by lazy {
         ViewModelProvider(this)[AppViewModel::class.java].also {
