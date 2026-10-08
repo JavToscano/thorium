@@ -25,6 +25,8 @@ class CatalogMatcherTest {
         entry("gba", "Super Mario Advance (Japan)", "Japan", crc = 0x11111111),
         entry("gba", "Kirby - Nightmare in Dream Land (USA)", "USA"),
         entry("snes", "Kirby - Nightmare in Dream Land (USA)", "USA"),
+        entry("genesis", "Sonic The Hedgehog (USA, Europe)", "USA"),
+        entry("nes", "Sonic The Hedgehog (Taiwan) (En) (Pirate)", "Taiwan"),
     )
 
     private val store = object : CatalogStore {
@@ -83,5 +85,11 @@ class CatalogMatcherTest {
     @Test
     fun `an unknown title gives no match`() {
         assertNull(matcher.identify("Does Not Exist", "gba"))
+    }
+
+    @Test
+    fun `without a console an exact name that exists on one console wins over a shared title`() {
+        assertEquals("genesis", matcher.identify("Sonic The Hedgehog (USA, Europe)")!!.entry.platformId)
+        assertNull(matcher.identify("Sonic The Hedgehog"))
     }
 }

@@ -35,9 +35,15 @@ class CatalogMatcher(
         }
         val candidates = store.byKey(platformId, keyOf(fileName))
         if (candidates.isEmpty()) return null
-        // Without a known console, a title that exists on several of them is ambiguous.
-        if (platformId == null && candidates.map { it.platformId }.distinct().size > 1) return null
-        val best = pick(candidates, fileName) ?: return null
+        var pool = candidates
+        // Without a known console, a title on several of them is ambiguous unless the exact release
+        // name exists on only one (a pirate port can share a title with the real game).
+        if (platformId == null && pool.map { it.platformId }.distinct().size > 1) {
+            val exact = pool.filter { it.name.equals(fileName, ignoreCase = true) }
+            if (exact.map { it.platformId }.distinct().size != 1) return null
+            pool = exact
+        }
+        val best = pick(pool, fileName) ?: return null
         val exact = best.name.equals(fileName, ignoreCase = true)
         return CatalogMatch(best, if (exact) MatchKind.Name else MatchKind.Title)
     }

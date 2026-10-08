@@ -40,6 +40,7 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
     val appViewModel: AppViewModel by lazy {
         ViewModelProvider(this)[AppViewModel::class.java].also {
             it.permissionGranted = StoragePermission::isGranted
+            it.catalogProvider = { catalog }
             it.storageRoots = { StorageRoots.detect(this) }
             it.storageVolumes = { StorageRoots.volumes(this) }
             val data = ThoriumData.create(this)

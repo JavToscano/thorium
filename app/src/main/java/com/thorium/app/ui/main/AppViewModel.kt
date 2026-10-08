@@ -148,6 +148,9 @@ class AppViewModel : ViewModel() {
 
     /** Wired by the application: storage permission check and the folders to scan. */
     var permissionGranted: () -> Boolean = { true }
+
+    /** The bundled game catalog; opened on first use, so call it off the main thread. */
+    var catalogProvider: () -> com.thorium.core.model.GameCatalog? = { null }
     var storageRoots: () -> List<File> = { emptyList() }
     var storageVolumes: () -> List<StorageVolumeInfo> = { emptyList() }
     var onRequestStoragePermission: (() -> Unit)? = null
@@ -293,6 +296,12 @@ class AppViewModel : ViewModel() {
         override val items get() = downloadItems
         override val platforms: List<GameSystem> get() = PlatformCatalog.Default.platforms.map { it.system }
         override fun toast(message: UiText) = showToast(message)
+
+        override fun identify(source: SourceConfig, entry: RemoteEntry): com.thorium.core.model.CatalogMatch? =
+            catalogProvider()?.identify(
+                com.thorium.data.metadata.FileStems.of(entry.name),
+                entry.platformId ?: source.defaultPlatformId,
+            )
 
         override fun pause(id: Long) { downloads?.pause(id) }
         override fun resume(id: Long) { downloads?.resume(id) }

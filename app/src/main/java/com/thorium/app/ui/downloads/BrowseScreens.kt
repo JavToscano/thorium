@@ -8,7 +8,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thorium.app.R
-import com.thorium.app.ui.main.formatBytes
 import com.thorium.app.ui.settings.FocusList
 import com.thorium.app.ui.settings.ListRow
 import com.thorium.app.ui.settings.PageFrame
@@ -32,7 +31,7 @@ internal fun BrowsePage(c: DownloadsController) {
                     FocusList(list, b.index) { _, entry, focused ->
                         ListRow(
                             title = entry.name,
-                            detail = entry.sizeBytes?.let(::formatBytes),
+                            detail = b.detail(entry),
                             focused = focused,
                             trailing = if (entry.isDirectory) "›" else null,
                         )
