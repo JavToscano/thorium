@@ -22,3 +22,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Thorium"
 include(":app")
+include(":core:model")
+include(":core:ui")
+include(":data:library")

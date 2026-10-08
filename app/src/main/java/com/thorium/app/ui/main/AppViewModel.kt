@@ -8,10 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.thorium.app.data.fake.FakeLibrary
-import com.thorium.app.domain.Game
-import com.thorium.app.domain.GameSystem
-import com.thorium.app.ui.input.GamepadAction
+import com.thorium.data.library.FakeLibrary
+import com.thorium.core.model.Game
+import com.thorium.core.model.GameSystem
+import com.thorium.core.ui.input.GamepadAction
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -1,24 +1,15 @@
+// Shared Compose building blocks: theme, gamepad input mapping and focus-driven components.
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "com.thorium.app"
+    namespace = "com.thorium.core.ui"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.thorium.app"
         minSdk = 29
-        targetSdk = 33
-        versionCode = 1
-        versionName = "0.0.1-spike"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-        }
     }
 
     compileOptions {
@@ -33,10 +24,6 @@ android {
 
 dependencies {
     implementation(project(":core:model"))
-    implementation(project(":core:ui"))
-    implementation(project(":data:library"))
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)

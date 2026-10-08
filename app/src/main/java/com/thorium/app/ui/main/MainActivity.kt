@@ -7,8 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import com.thorium.app.spike.SpikeActivity
-import com.thorium.app.ui.input.InputMapper
-import com.thorium.app.ui.theme.ThoriumTheme
+import com.thorium.core.ui.input.InputMapper
+import com.thorium.core.ui.theme.ThoriumTheme
 
 class MainActivity : ComponentActivity() {
 

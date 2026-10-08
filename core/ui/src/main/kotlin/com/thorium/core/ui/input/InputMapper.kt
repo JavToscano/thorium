@@ -1,4 +1,4 @@
-package com.thorium.app.ui.input
+package com.thorium.core.ui.input
 
 import android.view.InputDevice
 import android.view.KeyEvent

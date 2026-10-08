@@ -1,4 +1,4 @@
-package com.thorium.app.ui.theme
+package com.thorium.core.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme

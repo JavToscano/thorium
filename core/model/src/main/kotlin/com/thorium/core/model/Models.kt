@@ -1,4 +1,4 @@
-package com.thorium.app.domain
+package com.thorium.core.model
 
 data class GameSystem(
     val id: String,

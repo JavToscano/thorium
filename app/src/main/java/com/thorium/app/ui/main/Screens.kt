@@ -30,9 +30,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.thorium.app.domain.Game
-import com.thorium.app.ui.theme.Dimens
-import com.thorium.app.ui.theme.Palette
+import com.thorium.core.model.Game
+import com.thorium.core.ui.components.ActionButton
+import com.thorium.core.ui.components.Cover
+import com.thorium.core.ui.components.HintBar
+import com.thorium.core.ui.theme.Dimens
+import com.thorium.core.ui.theme.Palette
 import java.util.Locale
 
 @Composable

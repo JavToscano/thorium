@@ -1,8 +1,8 @@
-package com.thorium.app.data.fake
+package com.thorium.data.library
 
-import com.thorium.app.domain.Game
-import com.thorium.app.domain.GameSystem
-import com.thorium.app.domain.Library
+import com.thorium.core.model.Game
+import com.thorium.core.model.GameSystem
+import com.thorium.core.model.Library
 
 /** Placeholder data for Phase 4. Replaced by the real library (Phase 5/6). */
 object FakeLibrary {
