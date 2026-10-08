@@ -56,6 +56,29 @@ class DisplayCoordinator(
     }
 
     /**
+     * Launches [target] on the default (top) display, reusing an instance that is already there.
+     * Used by a UI-less entry activity so the main UI always lands on the top screen, even when
+     * the app icon was tapped on the bottom screen's launcher. [from] must live in a different
+     * task than [target], otherwise the system tries to move that very task between displays.
+     * Returns false when the launch fails so the caller can fall back to a plain start.
+     */
+    fun launchOnDefaultDisplay(from: Activity, target: Class<out Activity>): Boolean {
+        val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY)
+        if (display == null || !display.isValid) return false
+        return try {
+            val options = ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY)
+            val intent = Intent(from, target).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            )
+            from.startActivity(intent, options.toBundle())
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "Could not launch ${target.simpleName} on the default display", t)
+            false
+        }
+    }
+
+    /**
      * Brings [activity] back to the front on its own display. Closing the activity that held the
      * system input focus on the other display would otherwise leave the focus on that display's
      * launcher, and controller buttons would stop reaching the app.

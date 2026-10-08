@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Thorium" parent="android:Theme.Material.NoActionBar" />
+
+    <!-- Invisible theme for the UI-less entry activity. -->
+    <style name="Theme.Thorium.Entry" parent="android:Theme.Translucent.NoTitleBar" />
 </resources>

@@ -9,15 +9,28 @@
         android:label="Thorium"
         android:theme="@style/Theme.Thorium">
 
+        <!--
+            Entry point behind the app icon. It has no UI: it opens MainActivity on the top screen
+            and finishes, so the app lands there even when started from the bottom screen's launcher.
+            It needs its own task (empty affinity) for the system to be able to place MainActivity.
+        -->
         <activity
-            android:name=".ui.main.MainActivity"
+            android:name=".LauncherActivity"
             android:exported="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode">
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@style/Theme.Thorium.Entry">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.main.MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode" />
 
         <activity
             android:name=".spike.SpikeActivity"
