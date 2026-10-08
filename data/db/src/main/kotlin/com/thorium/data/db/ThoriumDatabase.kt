@@ -14,7 +14,7 @@ import androidx.room.RoomDatabase
         SourceEntity::class,
         DownloadEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
     autoMigrations = [
         // v1 -> v2: adds scan_roots and settings (new tables only).
@@ -23,6 +23,8 @@ import androidx.room.RoomDatabase
         AutoMigration(from = 2, to = 3),
         // v3 -> v4: adds downloads (new table only).
         AutoMigration(from = 3, to = 4),
+        // v4 -> v5: sources.defaultPlatformId (nullable column).
+        AutoMigration(from = 4, to = 5),
     ],
 )
 abstract class ThoriumDatabase : RoomDatabase() {

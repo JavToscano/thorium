@@ -31,6 +31,11 @@ data class SourceConfig(
     val enabled: Boolean = true,
     /** Result of the last connection test: true worked, false failed, null never tested. */
     val healthy: Boolean? = null,
+    /**
+     * Console id (`gba`, `3ds`...) for sources that only hold games of one console, so downloads from
+     * it need no question. The platform a catalog states for a file still wins over this.
+     */
+    val defaultPlatformId: String? = null,
 )
 
 /** One file or folder offered by a source. */

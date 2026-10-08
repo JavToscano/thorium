@@ -17,7 +17,7 @@ import com.thorium.data.library.FolderInitializer
 import com.thorium.data.library.SetupEntry
 import java.io.File
 
-enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, Browse, PlatformPick }
+enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, Browse, PlatformPick, SourceConsole }
 
 /** One selectable row of the "Game folders" page. */
 sealed interface FolderRow {
@@ -72,7 +72,7 @@ class SettingsController(internal val host: SettingsHost) {
 
     /** Sources list and add/edit form. */
     internal val browseUi = BrowseController(host, keyboard) { page = it }
-    internal val sourcesUi = SourcesController(host, keyboard, { page = it }, { browseUi.open(it) })
+    internal val sourcesUi = SourcesController(host, keyboard, { page = it }, { browseUi.open(it) }, { host.platforms })
 
     var page by mutableStateOf(SettingsPage.Main); private set
     var mainIndex by mutableIntStateOf(0); private set
@@ -129,6 +129,7 @@ class SettingsController(internal val host: SettingsHost) {
             SettingsPage.SourceForm -> sourcesUi.formHints
             SettingsPage.Browse -> browseUi.hints
             SettingsPage.PlatformPick -> browseUi.platformHints
+            SettingsPage.SourceConsole -> browseUi.platformHints
         }
 
     private val keyboardHints = listOf(
@@ -151,6 +152,7 @@ class SettingsController(internal val host: SettingsHost) {
         SettingsPage.SourceForm -> sourcesUi.handleForm(action)
         SettingsPage.Browse -> browseUi.handle(action)
         SettingsPage.PlatformPick -> browseUi.handlePlatform(action)
+        SettingsPage.SourceConsole -> sourcesUi.handleConsole(action)
     }
 
     private fun handleMain(action: GamepadAction): Boolean {

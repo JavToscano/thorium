@@ -251,4 +251,10 @@
     <string name="toast_download_no_folder">No hay una carpeta de juegos donde guardarlo. Añade una en Ajustes → Carpetas de juegos.</string>
     <string name="platform_title">¿De qué consola es?</string>
     <string name="platform_subtitle">%1$s · Thorium no pudo saber a qué consola pertenece. Se guardará en la carpeta de esa consola.</string>
+
+    <!-- Consola por defecto de una fuente -->
+    <string name="field_default_console">Consola por defecto</string>
+    <string name="default_console_ask">Preguntar cada vez</string>
+    <string name="default_console_ask_desc">Thorium deduce la consola del archivo, o pregunta</string>
+    <string name="default_console_subtitle">Para una fuente que solo tiene juegos de una consola. Sus descargas van a la carpeta de esa consola salvo que la fuente indique otra.</string>
 </resources>

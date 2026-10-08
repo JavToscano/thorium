@@ -246,4 +246,10 @@
     <string name="toast_download_no_folder">There is no game folder to save it in. Add one in Settings → Game folders.</string>
     <string name="platform_title">Which console is this?</string>
     <string name="platform_subtitle">%1$s · Thorium could not tell which console it belongs to. It will be saved in that console\'s folder.</string>
+
+    <!-- Default console of a source -->
+    <string name="field_default_console">Default console</string>
+    <string name="default_console_ask">Ask each time</string>
+    <string name="default_console_ask_desc">Thorium works out the console from the file, or asks</string>
+    <string name="default_console_subtitle">For a source that only has games of one console. Its downloads go to that console\'s folder unless the source states another one.</string>
 </resources>

@@ -52,6 +52,7 @@ private fun SourceEntity.toConfig() = SourceConfig(
     allowInsecure = allowInsecure,
     enabled = enabled,
     healthy = lastCheckOk?.let { it == 1 },
+    defaultPlatformId = defaultPlatformId,
 )
 
 private fun SourceConfig.toEntity(passwordEnc: String?, createdAt: Long, lastCheckOk: Int?, lastCheckedAt: Long?) =
@@ -67,4 +68,5 @@ private fun SourceConfig.toEntity(passwordEnc: String?, createdAt: Long, lastChe
         createdAt = createdAt,
         lastCheckOk = lastCheckOk,
         lastCheckedAt = lastCheckedAt,
+        defaultPlatformId = defaultPlatformId,
     )

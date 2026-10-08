@@ -65,7 +65,7 @@ class DownloadManager(
      * otherwise it is detected; if it cannot be, the caller must ask and call again.
      */
     suspend fun request(source: SourceConfig, entry: RemoteEntry, platform: PlatformDefinition? = null): DownloadRequest {
-        val detected = platform ?: destinations.detectPlatform(entry.platformId, entry.name, pathOf(entry.ref))
+        val detected = platform ?: destinations.detectPlatform(entry.platformId ?: source.defaultPlatformId, entry.name, pathOf(entry.ref))
             ?: return DownloadRequest.NeedsPlatform
         // The same file already waiting or running is not queued twice.
         data.downloads.all()

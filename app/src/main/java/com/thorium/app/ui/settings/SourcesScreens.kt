@@ -53,6 +53,12 @@ internal fun SourceFormPage(c: SettingsController) {
                     stringResource(R.string.field_insecure), stringResource(R.string.field_insecure_desc), focused,
                     trailing = stringResource(if (draft.allowInsecure) R.string.value_on else R.string.value_off),
                 )
+                FormRow.Console -> ListRow(
+                    stringResource(R.string.field_default_console),
+                    draft.defaultPlatformId?.let { id -> s.consoleChoices.firstOrNull { it?.id == id }?.name }
+                        ?: stringResource(R.string.default_console_ask),
+                    focused,
+                )
                 FormRow.Test -> ListRow(
                     stringResource(R.string.action_test),
                     when (val r = s.testResult) {
@@ -65,6 +71,20 @@ internal fun SourceFormPage(c: SettingsController) {
                 )
                 FormRow.Save -> ListRow(stringResource(R.string.action_save), null, focused)
                 FormRow.Delete -> ListRow(stringResource(R.string.action_delete), null, focused)
+            }
+        }
+    }
+}
+
+@Composable
+internal fun SourceConsolePage(c: SettingsController) {
+    val s = c.sourcesUi
+    PageFrame(stringResource(R.string.field_default_console), stringResource(R.string.default_console_subtitle)) {
+        FocusList(s.consoleChoices, s.consoleIndex) { _, system, focused ->
+            if (system == null) {
+                ListRow(stringResource(R.string.default_console_ask), stringResource(R.string.default_console_ask_desc), focused)
+            } else {
+                ListRow(system.name, stringResource(R.string.setup_folder_detail, system.id), focused)
             }
         }
     }

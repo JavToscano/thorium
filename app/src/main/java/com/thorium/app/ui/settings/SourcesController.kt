@@ -22,16 +22,18 @@ data class SourceDraft(
     val password: String? = null,
     val hasPassword: Boolean = false,
     val allowInsecure: Boolean = false,
+    val defaultPlatformId: String? = null,
 ) {
     fun toConfig() = SourceConfig(
         id = id, name = name, type = type, location = location, username = username,
-        hasPassword = hasPassword, allowInsecure = allowInsecure,
+        hasPassword = hasPassword, allowInsecure = allowInsecure, defaultPlatformId = defaultPlatformId,
     )
 
     companion object {
         fun from(config: SourceConfig) = SourceDraft(
             id = config.id, name = config.name, type = config.type, location = config.location,
             username = config.username, hasPassword = config.hasPassword, allowInsecure = config.allowInsecure,
+            defaultPlatformId = config.defaultPlatformId,
         )
     }
 }
@@ -44,7 +46,7 @@ sealed interface TestResult {
 }
 
 /** Rows of the source form; which ones show depends on the source type. */
-enum class FormRow { Name, Type, Location, Username, Password, Insecure, Test, Save, Delete }
+enum class FormRow { Name, Type, Location, Username, Password, Insecure, Console, Test, Save, Delete }
 
 /** What the sources screens need from the rest of the app. */
 interface SourcesHost {
@@ -62,11 +64,17 @@ class SourcesController(
     private val keyboard: KeyboardController,
     private val goTo: (SettingsPage) -> Unit,
     private val onBrowse: (SourceConfig) -> Unit,
+    /** Console ids offered by the "default console" picker, in display order. */
+    private val platforms: () -> List<com.thorium.core.model.GameSystem>,
 ) {
     var listIndex by mutableIntStateOf(0); private set
     var formIndex by mutableIntStateOf(0); private set
     var draft by mutableStateOf(SourceDraft()); private set
     var testResult by mutableStateOf<TestResult>(TestResult.Idle); private set
+    var consoleIndex by mutableIntStateOf(0); private set
+
+    /** Rows of the default-console picker: "ask each time" first, then every console. */
+    val consoleChoices: List<com.thorium.core.model.GameSystem?> get() = listOf<com.thorium.core.model.GameSystem?>(null) + platforms()
 
     val editing: Boolean get() = draft.id != 0L
 
@@ -80,6 +88,7 @@ class SourcesController(
                 add(FormRow.Password)
             }
             if (draft.type == SourceType.Http || draft.type == SourceType.Catalog) add(FormRow.Insecure)
+            add(FormRow.Console)
             add(FormRow.Test)
             add(FormRow.Save)
             if (editing) add(FormRow.Delete)
@@ -131,6 +140,23 @@ class SourcesController(
         return true
     }
 
+    /** The default-console picker: A chooses, B goes back to the form. */
+    fun handleConsole(action: GamepadAction): Boolean {
+        val choices = consoleChoices
+        consoleIndex = consoleIndex.coerceIn(0, choices.size - 1)
+        when (action) {
+            GamepadAction.Up -> consoleIndex = (consoleIndex - 1).coerceAtLeast(0)
+            GamepadAction.Down -> consoleIndex = (consoleIndex + 1).coerceAtMost(choices.size - 1)
+            GamepadAction.Select -> {
+                draft = draft.copy(defaultPlatformId = choices[consoleIndex]?.id)
+                goTo(SettingsPage.SourceForm)
+            }
+            GamepadAction.Back -> goTo(SettingsPage.SourceForm)
+            else -> return false
+        }
+        return true
+    }
+
     private fun openForm(newDraft: SourceDraft) {
         draft = newDraft
         formIndex = 0
@@ -156,6 +182,10 @@ class SourcesController(
                 if (it.isNotEmpty()) draft = draft.copy(password = it, hasPassword = true)
             }
             FormRow.Insecure -> draft = draft.copy(allowInsecure = !draft.allowInsecure)
+            FormRow.Console -> {
+                consoleIndex = consoleChoices.indexOfFirst { it?.id == draft.defaultPlatformId }.coerceAtLeast(0)
+                goTo(SettingsPage.SourceConsole)
+            }
             FormRow.Test -> runTest()
             FormRow.Save -> save()
             FormRow.Delete -> {

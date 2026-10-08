@@ -82,6 +82,7 @@ data class SourceEntity(
     /** 1 = last test worked, 0 = failed, null = never tested. */
     val lastCheckOk: Int?,
     val lastCheckedAt: Long?,
+    val defaultPlatformId: String? = null,
 )
 
 /** One entry of the download queue; mirrors [com.thorium.core.model.DownloadItem]. */
