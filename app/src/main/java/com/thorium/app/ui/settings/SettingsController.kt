@@ -6,9 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.thorium.app.storage.StorageVolumeInfo
 import com.thorium.core.ui.input.GamepadAction
+import com.thorium.data.library.FolderInitializer
+import com.thorium.data.library.SetupEntry
 import java.io.File
 
-enum class SettingsPage { Main, Folders, Browser }
+enum class SettingsPage { Main, Folders, Browser, Setup }
 
 /** One selectable row of the "Game folders" page. */
 sealed interface FolderRow {
@@ -42,6 +44,8 @@ interface SettingsHost {
  */
 class SettingsController(private val host: SettingsHost) {
 
+    private val initializer = FolderInitializer()
+
     var page by mutableStateOf(SettingsPage.Main); private set
     var mainIndex by mutableIntStateOf(0); private set
     var foldersIndex by mutableIntStateOf(0); private set
@@ -50,6 +54,12 @@ class SettingsController(private val host: SettingsHost) {
     /** Folder being browsed; null means the list of storage volumes. */
     var browserDir by mutableStateOf<File?>(null); private set
     var browserEntries by mutableStateOf<List<BrowserEntry>>(emptyList()); private set
+
+    // "Set up folder" page: which console folders to create inside [setupPath].
+    var setupPath by mutableStateOf(""); private set
+    var setupEntries by mutableStateOf<List<SetupEntry>>(emptyList()); private set
+    var setupSelected by mutableStateOf<Set<String>>(emptySet()); private set
+    var setupIndex by mutableIntStateOf(0); private set
 
     val mainItems: List<Pair<String, String?>>
         get() = listOf(
@@ -72,6 +82,7 @@ class SettingsController(private val host: SettingsHost) {
             SettingsPage.Main -> listOf("A" to "Select", "B" to "Home", "L1/R1" to "Tabs", "START" to "Menu")
             SettingsPage.Folders -> listOf("A" to "Select", "Y" to "Remove folder", "B" to "Back")
             SettingsPage.Browser -> listOf("A" to "Open", "Y" to "Use this folder", "B" to "Up")
+            SettingsPage.Setup -> listOf("A" to "Toggle / Create", "Y" to "All / None", "B" to "Back")
         }
 
     /** Leaves any sub-page; called when the tab is entered again from elsewhere. */
@@ -84,6 +95,7 @@ class SettingsController(private val host: SettingsHost) {
         SettingsPage.Main -> handleMain(action)
         SettingsPage.Folders -> handleFolders(action)
         SettingsPage.Browser -> handleBrowser(action)
+        SettingsPage.Setup -> handleSetup(action)
     }
 
     private fun handleMain(action: GamepadAction): Boolean {
@@ -109,9 +121,9 @@ class SettingsController(private val host: SettingsHost) {
         when (action) {
             GamepadAction.Up -> foldersIndex = (foldersIndex - 1).coerceAtLeast(0)
             GamepadAction.Down -> foldersIndex = (foldersIndex + 1).coerceAtMost(rows.size - 1)
-            GamepadAction.Select -> when (rows[foldersIndex]) {
+            GamepadAction.Select -> when (val row = rows[foldersIndex]) {
                 is FolderRow.AutoDetect -> host.setAutoDetectStorage(!host.autoDetectStorage)
-                is FolderRow.Custom -> host.toast("Press Y to remove this folder")
+                is FolderRow.Custom -> openSetup(row.path)
                 FolderRow.Add -> openBrowser()
             }
             GamepadAction.Favorite -> (rows[foldersIndex] as? FolderRow.Custom)?.let {
@@ -174,7 +186,56 @@ class SettingsController(private val host: SettingsHost) {
             return
         }
         host.addRoot(target.path)
+        // Offer to create the console folders right away; B leaves it untouched.
+        openSetup(target.path)
+    }
+
+    private fun handleSetup(action: GamepadAction): Boolean {
+        val creatable = setupEntries.filter { it.existingName == null }.map { it.platform.id }
+        val rowCount = 1 + setupEntries.size
+        when (action) {
+            GamepadAction.Up -> setupIndex = (setupIndex - 1).coerceAtLeast(0)
+            GamepadAction.Down -> setupIndex = (setupIndex + 1).coerceAtMost(rowCount - 1)
+            GamepadAction.Select ->
+                if (setupIndex == 0) {
+                    createSelectedFolders()
+                } else {
+                    val entry = setupEntries[setupIndex - 1]
+                    if (entry.existingName == null) {
+                        val id = entry.platform.id
+                        setupSelected = if (id in setupSelected) setupSelected - id else setupSelected + id
+                    }
+                }
+            GamepadAction.Favorite ->
+                setupSelected = if (setupSelected.size == creatable.size) emptySet() else creatable.toSet()
+            GamepadAction.Back -> page = SettingsPage.Folders
+            else -> return false
+        }
+        return true
+    }
+
+    fun openSetup(path: String) {
+        setupPath = path
+        setupEntries = initializer.inspect(File(path))
+        setupSelected = setupEntries.filter { it.existingName == null }.map { it.platform.id }.toSet()
+        setupIndex = 0
+        page = SettingsPage.Setup
+    }
+
+    private fun createSelectedFolders() {
+        if (setupSelected.isEmpty()) {
+            host.toast("Nothing to create")
+            return
+        }
+        val result = initializer.create(File(setupPath), setupSelected)
+        host.toast(
+            when {
+                result.failed.isNotEmpty() ->
+                    "Created ${result.created.size}, could not create: ${result.failed.joinToString()}"
+                result.created.size == 1 -> "Created 1 folder"
+                else -> "Created ${result.created.size} folders"
+            }
+        )
         page = SettingsPage.Folders
-        foldersIndex = 0
     }
 }

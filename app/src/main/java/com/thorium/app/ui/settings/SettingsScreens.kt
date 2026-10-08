@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.thorium.app.ui.main.gameCountLabel
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
+import com.thorium.data.library.SetupEntry
 
 @Composable
 fun SettingsScreen(controller: SettingsController) {
@@ -36,6 +37,7 @@ fun SettingsScreen(controller: SettingsController) {
         SettingsPage.Main -> MainPage(controller)
         SettingsPage.Folders -> FoldersPage(controller)
         SettingsPage.Browser -> BrowserPage(controller)
+        SettingsPage.Setup -> SetupPage(controller)
     }
 }
 
@@ -112,7 +114,11 @@ private fun FoldersPage(c: SettingsController) {
                     focused = focused,
                     trailing = if (row.enabled) "On" else "Off",
                 )
-                is FolderRow.Custom -> ListRow(row.path, gameCountLabel(row.gameCount), focused)
+                is FolderRow.Custom -> ListRow(
+                    row.path,
+                    "${gameCountLabel(row.gameCount)} - press A to create console folders here",
+                    focused,
+                )
                 FolderRow.Add -> ListRow("Add folder...", "Browse storage and pick a folder", focused)
             }
         }
@@ -135,3 +141,38 @@ private fun BrowserPage(c: SettingsController) {
         }
     }
 }
+
+@Composable
+private fun SetupPage(c: SettingsController) {
+    val creatable = c.setupEntries.count { it.existingName == null }
+    PageFrame(
+        "Set up folder",
+        "${c.setupPath} - tick the consoles you want and Thorium creates their folders.",
+    ) {
+        // Row 0 is the action; the rest are the consoles.
+        val rows = listOf<SetupEntry?>(null) + c.setupEntries
+        FocusList(rows, c.setupIndex) { _, entry, focused ->
+            if (entry == null) {
+                ListRow(
+                    title = "Create ${folderCount(c.setupSelected.size)}",
+                    detail = if (creatable == 0) "Every console already has a folder" else "Folders are named gba, 3ds, switch...",
+                    focused = focused,
+                )
+            } else {
+                val existing = entry.existingName
+                ListRow(
+                    title = entry.platform.system.name,
+                    detail = if (existing != null) "Already exists: $existing" else "Folder: ${entry.platform.id}",
+                    focused = focused,
+                    trailing = when {
+                        existing != null -> "Exists"
+                        entry.platform.id in c.setupSelected -> "[x]"
+                        else -> "[ ]"
+                    },
+                )
+            }
+        }
+    }
+}
+
+private fun folderCount(count: Int) = if (count == 1) "1 folder" else "$count folders"
