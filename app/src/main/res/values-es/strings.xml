@@ -139,8 +139,6 @@
     <string name="setup_exists_badge">Existe</string>
 
     <!-- Acompañante (pantalla inferior) -->
-    <string name="companion_screenshots">Capturas</string>
-    <string name="companion_soon">próximamente</string>
     <string name="companion_controls">Controles</string>
     <string name="companion_browse_system">Pulsa A para explorar esta consola</string>
     <string name="companion_select_game">Elige un juego en la pantalla superior</string>

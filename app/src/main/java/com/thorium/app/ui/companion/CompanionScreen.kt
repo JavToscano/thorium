@@ -75,20 +75,8 @@ private fun GameInfo(
                 Text(game.path, color = Palette.TextSecondary, fontSize = 10.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
-        if (strip != null) {
-            // Downloads in progress take the place of the (still empty) screenshot frames.
-            strip()
-        } else {
-            SectionTitle(stringResource(R.string.companion_screenshots))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                repeat(3) {
-                    Box(
-                        Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(8.dp)).background(Palette.Panel),
-                        contentAlignment = Alignment.Center,
-                    ) { Text(stringResource(R.string.companion_soon), color = Palette.TextSecondary, fontSize = 10.sp) }
-                }
-            }
-        }
+        // Downloads in progress are summarised here; with none, the controls simply follow.
+        strip?.invoke()
         SectionTitle(stringResource(R.string.companion_controls))
         Controls()
     }

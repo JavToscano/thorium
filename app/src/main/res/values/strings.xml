@@ -135,8 +135,6 @@
     <string name="setup_exists_badge">Exists</string>
 
     <!-- Companion (bottom screen) -->
-    <string name="companion_screenshots">Screenshots</string>
-    <string name="companion_soon">soon</string>
     <string name="companion_controls">Controls</string>
     <string name="companion_browse_system">Press A to browse this system</string>
     <string name="companion_select_game">Select a game on the top screen</string>
