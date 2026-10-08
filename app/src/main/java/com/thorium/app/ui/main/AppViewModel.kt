@@ -2,7 +2,6 @@ package com.thorium.app.ui.main
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,7 +10,9 @@ import androidx.lifecycle.viewModelScope
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
 import com.thorium.core.model.Library
+import com.thorium.data.db.LibraryRepository
 import com.thorium.data.library.LibraryScanner
+import com.thorium.data.library.PlatformCatalog
 import com.thorium.data.library.ScanStats
 import com.thorium.core.ui.input.GamepadAction
 import kotlinx.coroutines.Dispatchers
@@ -54,8 +55,10 @@ class AppViewModel : ViewModel() {
     private var scanJob: Job? = null
     private var library by mutableStateOf(Library.Empty)
 
-    // Favorites are kept in memory until the database arrives (phase 6).
-    private val favorites = mutableStateListOf<String>()
+    // Favorite game ids in the order they were added; mirrored from the database.
+    private var favorites by mutableStateOf<List<String>>(emptyList())
+
+    private var repository: LibraryRepository? = null
 
     var libraryState by mutableStateOf<LibraryState>(LibraryState.Scanning); private set
 
@@ -63,6 +66,27 @@ class AppViewModel : ViewModel() {
     var permissionGranted: () -> Boolean = { true }
     var storageRoots: () -> List<File> = { emptyList() }
     var onRequestStoragePermission: (() -> Unit)? = null
+
+    /**
+     * Connects the persistence layer. The library and favorites shown in the UI come from the
+     * database, so the last known library appears instantly on launch, before any scan finishes.
+     */
+    fun attachRepository(repository: LibraryRepository) {
+        if (this.repository != null) return
+        this.repository = repository
+        viewModelScope.launch {
+            repository.observeGames().collect { games -> library = buildLibrary(games) }
+        }
+        viewModelScope.launch {
+            repository.observeFavoriteIds().collect { favorites = it }
+        }
+    }
+
+    private fun buildLibrary(games: List<Game>): Library {
+        val used = games.mapTo(HashSet()) { it.systemId }
+        val systems = PlatformCatalog.Default.platforms.map { it.system }.filter { it.id in used }
+        return Library(systems, games)
+    }
 
     var tab by mutableStateOf(Tab.Home); private set
     var detail by mutableStateOf<Game?>(null); private set
@@ -122,11 +146,11 @@ class AppViewModel : ViewModel() {
         libraryState = LibraryState.Scanning
         scanJob = viewModelScope.launch {
             val result = withContext(Dispatchers.IO) { scanner.scan(storageRoots()) }
-            library = result.library
-            val ids = result.library.games.map { it.id }.toSet()
-            favorites.retainAll(ids)
+            // The UI updates itself through the repository's flows once the sync commits.
+            val summary = repository?.sync(result.library.games)
             libraryState = LibraryState.Ready(result.stats)
-            showToast("${result.stats.games} games found in ${result.stats.durationMs} ms")
+            val news = summary?.added?.takeIf { it > 0 }?.let { ", $it new" }.orEmpty()
+            showToast("${result.stats.games} games found$news (${result.stats.durationMs} ms)")
         }
     }
 
@@ -273,13 +297,9 @@ class AppViewModel : ViewModel() {
         }
 
     private fun toggleFavorite(game: Game) {
-        if (game.id in favorites) {
-            favorites.remove(game.id)
-            showToast("Removed from Favorites")
-        } else {
-            favorites.add(game.id)
-            showToast("Added to Favorites")
-        }
+        val makeFavorite = game.id !in favorites
+        viewModelScope.launch { repository?.setFavorite(game.id, makeFavorite) }
+        showToast(if (makeFavorite) "Added to Favorites" else "Removed from Favorites")
     }
 
     private fun showToast(message: String) {
