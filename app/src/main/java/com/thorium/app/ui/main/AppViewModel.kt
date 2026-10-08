@@ -26,6 +26,8 @@ import com.thorium.app.ui.settings.TestResult
 import com.thorium.app.ui.settings.SettingsHost
 import com.thorium.data.db.ScanSettings
 import com.thorium.data.db.ThoriumData
+import com.thorium.feature.launcher.EmulatorLauncher
+import com.thorium.feature.launcher.LaunchResult
 import com.thorium.data.library.LibraryScanner
 import com.thorium.data.sources.SourceFactory
 import com.thorium.data.library.PlatformCatalog
@@ -148,6 +150,9 @@ class AppViewModel : ViewModel() {
 
     /** Wired by the application: storage permission check and the folders to scan. */
     var permissionGranted: () -> Boolean = { true }
+
+    /** Starts games in external emulators; set by the application. */
+    var launcherProvider: () -> EmulatorLauncher? = { null }
 
     /** Cover downloads; set by the application, like [catalogProvider]. */
     var coverProvider: () -> com.thorium.core.model.CoverArt? = { null }
@@ -550,13 +555,25 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    /** Starts [game] in an installed emulator and says why when it cannot. */
+    private fun play(game: Game) {
+        val launcher = launcherProvider() ?: return
+        val system = PlatformCatalog.Default.platforms.firstOrNull { it.id == game.systemId }?.system?.name ?: game.systemId
+        when (val result = launcher.launch(game.files.map { it.path }, game.systemId)) {
+            is LaunchResult.Started -> Unit
+            LaunchResult.NoEmulator -> showToast(UiText.res(R.string.toast_no_emulator, system))
+            LaunchResult.FileMissing -> showToast(UiText.res(R.string.toast_game_missing, game.title))
+            is LaunchResult.Failed -> showToast(UiText.res(R.string.toast_launch_failed, result.emulator.name))
+        }
+    }
+
     private fun handleDetail(action: GamepadAction) {
         val game = detail ?: return
         when (action) {
             GamepadAction.Left -> detailFocus = (detailFocus - 1).coerceAtLeast(0)
             GamepadAction.Right -> detailFocus = (detailFocus + 1).coerceAtMost(DETAIL_BUTTONS.size - 1)
             GamepadAction.Select ->
-                if (detailFocus == 0) showToast(UiText.res(R.string.toast_launcher_soon)) else toggleFavorite(game)
+                if (detailFocus == 0) play(game) else toggleFavorite(game)
             GamepadAction.Favorite -> toggleFavorite(game)
             GamepadAction.Back -> detail = null
             GamepadAction.Menu -> openMenu()

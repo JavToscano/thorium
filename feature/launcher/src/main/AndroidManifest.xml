@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Needed to see which emulators are installed (Android 11+ hides other apps by default). -->
+    <queries>
+        <package android:name="org.azahar_emu.azahar" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" android:mimeType="application/octet-stream" />
+        </intent>
+    </queries>
+
+    <application>
+        <!--
+            Hands a game file to an emulator as a content:// address with read permission. The emulator
+            needs no storage permission of its own and never sees any other file.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/launcher_file_paths" />
+        </provider>
+    </application>
+</manifest>

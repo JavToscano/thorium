@@ -45,7 +45,6 @@
 
     <!-- Toasts -->
     <string name="toast_secondary_soon">Secondary actions arrive later</string>
-    <string name="toast_launcher_soon">Launcher arrives in Phase 11</string>
     <string name="toast_added_favorite">Added to Favorites</string>
     <string name="toast_removed_favorite">Removed from Favorites</string>
     <plurals name="toast_games_found">
@@ -279,4 +278,7 @@
     <string name="settings_covers_title">Cover art</string>
     <string name="settings_covers_desc">Downloads each game\'s cover from thumbnails.libretro.com. Only the game\'s name is sent.</string>
     <string name="companion_screenshots">Screenshots</string>
+    <string name="toast_no_emulator">No emulator installed for %1$s</string>
+    <string name="toast_game_missing">The file of %1$s is missing</string>
+    <string name="toast_launch_failed">Could not start %1$s</string>
 </resources>

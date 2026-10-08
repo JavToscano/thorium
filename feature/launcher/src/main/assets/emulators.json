@@ -1,0 +1,11 @@
+{
+  "emulators": [
+    {
+      "id": "azahar",
+      "name": "Azahar",
+      "package": "org.azahar_emu.azahar",
+      "activity": "org.citra.citra_emu.activities.EmulationActivity",
+      "platforms": ["3ds"]
+    }
+  ]
+}

@@ -45,7 +45,6 @@
 
     <!-- Avisos -->
     <string name="toast_secondary_soon">Las acciones secundarias llegarán después</string>
-    <string name="toast_launcher_soon">El lanzador llega en la Fase 11</string>
     <string name="toast_added_favorite">Añadido a Favoritos</string>
     <string name="toast_removed_favorite">Quitado de Favoritos</string>
     <plurals name="toast_games_found">
@@ -284,4 +283,7 @@
     <string name="settings_covers_title">Carátulas</string>
     <string name="settings_covers_desc">Descarga la carátula de cada juego de thumbnails.libretro.com. Solo se envía el nombre del juego.</string>
     <string name="companion_screenshots">Capturas</string>
+    <string name="toast_no_emulator">No hay un emulador instalado para %1$s</string>
+    <string name="toast_game_missing">Falta el archivo de %1$s</string>
+    <string name="toast_launch_failed">No se pudo iniciar %1$s</string>
 </resources>

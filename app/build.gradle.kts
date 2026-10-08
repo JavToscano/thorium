@@ -40,6 +40,7 @@ dependencies {
     implementation(project(":data:archive"))
     implementation(project(":data:downloads"))
     implementation(project(":data:metadata"))
+    implementation(project(":feature:launcher"))
     implementation(project(":feature:display"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

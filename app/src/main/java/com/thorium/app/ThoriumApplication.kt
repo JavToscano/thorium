@@ -23,6 +23,7 @@ import com.thorium.data.db.ThoriumData
 import com.thorium.data.library.TitleNormalizer
 import com.thorium.data.metadata.BundledCatalog
 import com.thorium.data.metadata.LibretroCovers
+import com.thorium.feature.launcher.EmulatorLauncher
 
 /**
  * Owns the single [AppViewModel] shared by every activity (one per display), so the top and
@@ -39,6 +40,9 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
     /** The bundled metadata catalog; opened on first use. */
     val catalog: GameCatalog by lazy { BundledCatalog.open(this) { TitleNormalizer.parse(it).matchKey } }
 
+    /** Starts games in the installed emulators. */
+    val launcher: EmulatorLauncher by lazy { EmulatorLauncher.load(this) }
+
     /** Box art, downloaded on demand into the app's cache. */
     val covers: CoverArt by lazy { LibretroCovers.create(java.io.File(cacheDir, "covers")) }
 
@@ -47,6 +51,7 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
             it.permissionGranted = StoragePermission::isGranted
             it.catalogProvider = { catalog }
             it.coverProvider = { covers }
+            it.launcherProvider = { launcher }
             it.storageRoots = { StorageRoots.detect(this) }
             it.storageVolumes = { StorageRoots.volumes(this) }
             val data = ThoriumData.create(this)

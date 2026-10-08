@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Games live on internal storage or on an SD card, so any path may be shared (only when asked to). -->
+    <root-path name="root" path="/" />
+</paths>
