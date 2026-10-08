@@ -160,6 +160,8 @@ class AppViewModel : ViewModel() {
 
     fun matchOf(game: Game): com.thorium.core.model.CatalogMatch? = gameArt.matches[game.id]
     fun coverOf(game: Game): java.io.File? = gameArt.coverFiles[game.id]
+    fun shotsOf(game: Game): List<java.io.File> = gameArt.shots[game.id].orEmpty()
+    fun requestShots(game: Game) = gameArt.requestShots(game)
 
     /** The bundled game catalog; opened on first use, so call it off the main thread. */
     var catalogProvider: () -> com.thorium.core.model.GameCatalog? = { null }

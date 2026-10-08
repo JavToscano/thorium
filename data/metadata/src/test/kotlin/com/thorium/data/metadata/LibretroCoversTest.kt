@@ -1,6 +1,7 @@
 package com.thorium.data.metadata
 
 import com.sun.net.httpserver.HttpServer
+import com.thorium.core.model.ArtKind
 import com.thorium.core.model.CatalogEntry
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
@@ -122,5 +123,23 @@ class LibretroCoversTest {
         val c = covers()
         val file = c.fetch(entry("../../evil (USA)"))!!
         assertTrue(file.canonicalPath.startsWith(File(tmp, "covers").canonicalPath))
+    }
+
+    @Test
+    fun `title screens and snaps come from their own folders and are cached apart`() = runBlocking {
+        val c = covers()
+        val game = entry("Super Mario Advance (USA, Europe)")
+        val title = c.fetch(game, ArtKind.Title)!!
+        val snap = c.fetch(game, ArtKind.Snap)!!
+        assertEquals(
+            listOf(
+                "/Nintendo - Game Boy Advance/Named_Titles/Super Mario Advance (USA, Europe).png",
+                "/Nintendo - Game Boy Advance/Named_Snaps/Super Mario Advance (USA, Europe).png",
+            ),
+            requests.toList(),
+        )
+        assertTrue(title != snap)
+        assertNull(c.cached(game, ArtKind.Boxart))
+        assertEquals(title, c.cached(game, ArtKind.Title))
     }
 }

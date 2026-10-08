@@ -43,10 +43,15 @@ fun CompanionScreen(vm: AppViewModel) {
             val strip: (@Composable () -> Unit)? = vm.unfinishedDownloads.takeIf { it.isNotEmpty() }
                 ?.let { active -> { DownloadsStrip(active, vm.downloadSpeeds) } }
             when (val card = vm.focusedCard) {
-                is CardModel.GameCard -> GameInfo(
+                is CardModel.GameCard -> {
+                    // Ask for the title screen and a snap whenever the focused game (or its match) changes.
+                    androidx.compose.runtime.LaunchedEffect(card.game.id, vm.matchOf(card.game)) { vm.requestShots(card.game) }
+                    GameInfo(
                     card.game, card.system, vm.isFavorite(card.game.id),
-                    rememberCoverArt(vm.coverOf(card.game)), vm.matchOf(card.game)?.entry?.region, strip,
-                )
+                    rememberCoverArt(vm.coverOf(card.game)), vm.matchOf(card.game)?.entry?.region,
+                    vm.shotsOf(card.game), strip,
+                    )
+                }
                 is CardModel.SystemCard -> SystemInfo(card.system, card.gameCount, strip)
                 null -> Idle(settings = vm.tab == Tab.Settings, strip = strip)
             }
@@ -57,7 +62,7 @@ fun CompanionScreen(vm: AppViewModel) {
 @Composable
 private fun GameInfo(
     game: Game, system: GameSystem, favorite: Boolean,
-    art: androidx.compose.ui.graphics.ImageBitmap?, region: String?,
+    art: androidx.compose.ui.graphics.ImageBitmap?, region: String?, shots: List<java.io.File>,
     strip: (@Composable () -> Unit)?,
 ) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -75,8 +80,27 @@ private fun GameInfo(
                 Text(game.path, color = Palette.TextSecondary, fontSize = 10.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
-        // Downloads in progress are summarised here; with none, the controls simply follow.
+        // Downloads in progress are summarised here.
         strip?.invoke()
+        if (shots.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.companion_screenshots))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                shots.forEach { file ->
+                    val image = rememberCoverArt(file)
+                    Box(
+                        Modifier.weight(1f).height(110.dp).clip(RoundedCornerShape(8.dp)).background(Palette.Panel),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (image != null) {
+                            androidx.compose.foundation.Image(
+                                image, contentDescription = null,
+                                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                            )
+                        }
+                    }
+                }
+            }
+        }
         SectionTitle(stringResource(R.string.companion_controls))
         Controls()
     }

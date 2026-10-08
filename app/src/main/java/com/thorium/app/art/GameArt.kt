@@ -3,6 +3,7 @@ package com.thorium.app.art
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.thorium.core.model.ArtKind
 import com.thorium.core.model.CatalogMatch
 import com.thorium.core.model.CoverArt
 import com.thorium.core.model.Game
@@ -31,10 +32,14 @@ class GameArt(
     /** Covers on disk, by game id. */
     var coverFiles by mutableStateOf<Map<String, File>>(emptyMap()); private set
 
+    /** Title screen and a game snap (when they exist), by game id; filled in when a game is focused. */
+    var shots by mutableStateOf<Map<String, List<File>>>(emptyMap()); private set
+
     var downloadEnabled = true; private set
 
     private var games: List<Game> = emptyList()
     private var job: Job? = null
+    private val shotsTried = HashSet<String>()
 
     fun update(list: List<Game>) {
         games = list
@@ -45,6 +50,25 @@ class GameArt(
         if (enabled == downloadEnabled) return
         downloadEnabled = enabled
         restart()
+    }
+
+    /**
+     * Makes the title screen and a snap of [game] available: what is on disk shows at once, the
+     * rest is downloaded once per session (and only while downloads are enabled).
+     */
+    fun requestShots(game: Game) {
+        val entry = matches[game.id]?.entry ?: return
+        val art = covers() ?: return
+        scope.launch(Dispatchers.Default) {
+            fun current() = listOfNotNull(art.cached(entry, ArtKind.Title), art.cached(entry, ArtKind.Snap))
+            current().takeIf { it.isNotEmpty() }?.let { shots = shots + (game.id to it) }
+            if (!downloadEnabled) return@launch
+            val first = synchronized(shotsTried) { shotsTried.add(game.id) }
+            if (!first) return@launch
+            art.fetch(entry, ArtKind.Title)
+            art.fetch(entry, ArtKind.Snap)
+            current().takeIf { it.isNotEmpty() }?.let { shots = shots + (game.id to it) }
+        }
     }
 
     private fun restart() {

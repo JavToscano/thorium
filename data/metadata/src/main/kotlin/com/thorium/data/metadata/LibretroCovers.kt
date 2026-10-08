@@ -1,5 +1,6 @@
 package com.thorium.data.metadata
 
+import com.thorium.core.model.ArtKind
 import com.thorium.core.model.CatalogEntry
 import com.thorium.core.model.CoverArt
 import kotlinx.coroutines.Dispatchers
@@ -13,8 +14,8 @@ import java.io.File
 import java.io.IOException
 
 /**
- * Box art from the libretro thumbnail server (thumbnails.libretro.com), which names its images
- * after the No-Intro release names the catalog already holds. No account or key is needed.
+ * Images (box art, title screens and game snaps) from the libretro thumbnail server
+ * (thumbnails.libretro.com), which names its images after the No-Intro release names the catalog already holds. No account or key is needed.
  *
  * Images are downloaded one game at a time on request and kept under [dir]. A game with no image
  * leaves a small marker so the server is not asked again until [missRetryMs] has passed; network
@@ -31,15 +32,15 @@ class LibretroCovers internal constructor(
 
     private val gate = Semaphore(parallel)
 
-    override fun cached(entry: CatalogEntry): File? =
-        fileFor(entry)?.takeIf { it.isFile && it.length() > 0 }
+    override fun cached(entry: CatalogEntry, kind: ArtKind): File? =
+        fileFor(entry, kind)?.takeIf { it.isFile && it.length() > 0 }
 
-    override suspend fun fetch(entry: CatalogEntry): File? {
-        cached(entry)?.let { return it }
-        val target = fileFor(entry) ?: return null
+    override suspend fun fetch(entry: CatalogEntry, kind: ArtKind): File? {
+        cached(entry, kind)?.let { return it }
+        val target = fileFor(entry, kind) ?: return null
         val miss = File(target.path + ".none")
         if (miss.exists() && clock() - miss.lastModified() < missRetryMs) return null
-        val url = urlFor(entry) ?: return null
+        val url = urlFor(entry, kind) ?: return null
         return gate.withPermit { withContext(Dispatchers.IO) { download(url, target, miss) } }
     }
 
@@ -71,16 +72,23 @@ class LibretroCovers internal constructor(
         }
     }
 
-    private fun fileFor(entry: CatalogEntry): File? {
+    /** Box art keeps the original layout (`<console>/<name>.png`); the other kinds get a sub-folder. */
+    private fun fileFor(entry: CatalogEntry, kind: ArtKind): File? {
         if (SYSTEMS[entry.platformId] == null) return null
-        return File(File(dir, entry.platformId), sanitize(entry.name) + ".png")
+        val base = File(dir, entry.platformId)
+        val folder = when (kind) {
+            ArtKind.Boxart -> base
+            ArtKind.Snap -> File(base, "snaps")
+            ArtKind.Title -> File(base, "titles")
+        }
+        return File(folder, sanitize(entry.name) + ".png")
     }
 
-    private fun urlFor(entry: CatalogEntry): okhttp3.HttpUrl? {
+    private fun urlFor(entry: CatalogEntry, kind: ArtKind): okhttp3.HttpUrl? {
         val system = SYSTEMS[entry.platformId] ?: return null
         return baseUrl.toHttpUrl().newBuilder()
             .addPathSegment(system)
-            .addPathSegment("Named_Boxarts")
+            .addPathSegment(kind.folder)
             .addPathSegment(sanitize(entry.name) + ".png")
             .build()
     }
