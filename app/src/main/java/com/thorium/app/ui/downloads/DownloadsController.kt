@@ -71,7 +71,10 @@ class DownloadsController(private val host: DownloadsHost, keyboard: KeyboardCon
             }
         }
 
-    val focusedRow: DownloadsRow? get() = rows.getOrNull(index)
+    /** The row that really has the focus: [index] moved onto the nearest row that can take it. */
+    val focusIndex: Int get() = settle(rows, index)
+
+    val focusedRow: DownloadsRow? get() = rows.getOrNull(focusIndex)
 
     /** Number of items that are still going (for a badge or summary). */
     val activeCount: Int get() = host.items.count { !it.state.isFinished && it.state != DownloadState.Paused }

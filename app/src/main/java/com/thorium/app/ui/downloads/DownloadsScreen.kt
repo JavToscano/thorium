@@ -46,7 +46,7 @@ fun DownloadsScreen(c: DownloadsController) {
 @Composable
 private fun MainPage(c: DownloadsController) {
     PageFrame(stringResource(R.string.tab_downloads), null) {
-        FocusList(c.rows, c.index) { _, row, focused ->
+        FocusList(c.rows, c.focusIndex) { _, row, focused ->
             when (row) {
                 is DownloadsRow.Header -> Text(
                     stringResource(row.title).uppercase(),
