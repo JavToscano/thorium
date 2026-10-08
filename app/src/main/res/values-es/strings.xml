@@ -104,8 +104,6 @@
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_desc">Se aplica a toda la aplicación</string>
     <string name="settings_rescan_title">Volver a escanear la biblioteca</string>
-    <string name="settings_diag_title">Diagnóstico</string>
-    <string name="settings_diag_desc">Probador de pantallas y mando (solo en inglés)</string>
     <string name="settings_about_title">Acerca de</string>
     <string name="settings_about_desc">Thorium %1$s</string>
     <string name="value_on">Sí</string>

@@ -34,21 +34,11 @@
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode" />
 
         <activity
-            android:name=".spike.SpikeActivity"
-            android:exported="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode" />
-
-        <activity
             android:name=".ui.companion.CompanionActivity"
             android:exported="false"
             android:launchMode="singleTask"
             android:taskAffinity="com.thorium.app.companion"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode" />
 
-        <activity
-            android:name=".spike.ProbeActivity"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode" />
     </application>
 </manifest>

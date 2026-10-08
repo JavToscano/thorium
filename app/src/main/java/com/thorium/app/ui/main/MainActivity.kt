@@ -1,13 +1,11 @@
 package com.thorium.app.ui.main
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import com.thorium.app.ThoriumApplication
-import com.thorium.app.spike.SpikeActivity
 import com.thorium.app.storage.StoragePermission
 import com.thorium.app.ui.companion.CompanionActivity
 import com.thorium.core.ui.input.dispatchGamepadKey
@@ -26,7 +24,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         vm.markMainOpen()
-        vm.onOpenDiagnostics = { startActivity(Intent(this, SpikeActivity::class.java)) }
         vm.onRequestStoragePermission = { StoragePermission.openSettings(this) }
         setContent {
             ThoriumTheme {
@@ -63,7 +60,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        vm.onOpenDiagnostics = null
         vm.onRequestStoragePermission = null
         if (isFinishing) vm.markMainClosed()
     }

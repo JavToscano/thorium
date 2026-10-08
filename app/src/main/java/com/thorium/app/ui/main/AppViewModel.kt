@@ -156,8 +156,6 @@ class AppViewModel : ViewModel() {
     private val itemFocus = mutableStateMapOf<String, Int>()
     private var toastJob: Job? = null
 
-    var onOpenDiagnostics: (() -> Unit)? = null
-
     /** Wired by the application; null when per-app language is not available (Android < 13). */
     var languageController: LanguageController? = null
 
@@ -199,7 +197,6 @@ class AppViewModel : ViewModel() {
         }
 
         override fun rescan() = refreshLibrary(force = true)
-        override fun openDiagnostics() { onOpenDiagnostics?.invoke() }
         override fun toast(message: UiText) = showToast(message)
         override val language get() = languageController
         override fun cycleLanguage() { languageController?.cycle() }

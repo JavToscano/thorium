@@ -31,7 +31,6 @@ enum class SettingsItem(@StringRes val title: Int, @StringRes val description: I
     DualScreen(R.string.settings_dual_title, R.string.settings_dual_desc),
     Language(R.string.settings_language_title, R.string.settings_language_desc),
     Rescan(R.string.settings_rescan_title, null),
-    Diagnostics(R.string.settings_diag_title, R.string.settings_diag_desc),
     About(R.string.settings_about_title, R.string.settings_about_desc),
 }
 
@@ -50,7 +49,6 @@ interface SettingsHost {
     fun removeRoot(path: String)
     fun setCompanionEnabled(enabled: Boolean)
     fun rescan()
-    fun openDiagnostics()
     fun toast(message: UiText)
     val language: LanguageController?
     fun cycleLanguage()
@@ -93,7 +91,6 @@ class SettingsController(private val host: SettingsHost) {
             add(SettingsItem.DualScreen)
             if (host.language != null) add(SettingsItem.Language)
             add(SettingsItem.Rescan)
-            add(SettingsItem.Diagnostics)
             add(SettingsItem.About)
         }
 
@@ -144,7 +141,6 @@ class SettingsController(private val host: SettingsHost) {
                 SettingsItem.DualScreen -> host.setCompanionEnabled(!host.companionEnabled)
                 SettingsItem.Language -> host.cycleLanguage()
                 SettingsItem.Rescan -> host.rescan()
-                SettingsItem.Diagnostics -> host.openDiagnostics()
                 SettingsItem.About -> host.toast(UiText.res(R.string.toast_about, VERSION))
             }
             else -> return false
