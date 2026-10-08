@@ -4,6 +4,7 @@
     <!-- Needed to see which emulators are installed (Android 11+ hides other apps by default). -->
     <queries>
         <package android:name="org.azahar_emu.azahar" />
+        <package android:name="com.retroarch.aarch64" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="content" android:mimeType="application/octet-stream" />

@@ -4,7 +4,7 @@
 
 Thorium finds the games you already have on your Thor, shows them in a library you can browse without touching the screen, and uses the second display as a live detail panel for whatever you have selected.
 
-> **Early development.** Browsing your library, cover art, downloads from your own sources and launching games work today, but so far launching has only been tested with the Azahar 3DS emulator; see the [roadmap](#roadmap).
+> **Early development.** Browsing your library, cover art, downloads from your own sources and launching games work today, but so far launching has only been tested with Azahar (3DS) and RetroArch with mGBA (GBA); see the [roadmap](#roadmap).
 
 ---
 
@@ -16,7 +16,7 @@ Thorium finds the games you already have on your Thor, shows them in a library y
 - **Favorites and recently added.** Home, Systems and Favorites tabs.
 - **Set up your folders.** Pick where your games live, and Thorium can create the per-console folders for you.
 - **Cover art.** Thorium recognises your games against a bundled catalog of game names and checksums (no games, no download links) and shows their box art, title screen and a gameplay snap, downloaded from the libretro thumbnail server. You can turn the downloads off in Settings.
-- **Play.** The Play button starts a game in an installed emulator. Emulators are described by data files, not hard-coded. **Azahar (3DS)** is supported so far.
+- **Play.** The Play button starts a game in an installed emulator. Emulators are described by data files, not hard-coded. **Azahar (3DS)** and **RetroArch with the mGBA core (GBA)** are supported so far; you download the core inside RetroArch.
 - **Your own sources and downloads.** Add web servers, JSON catalogs, Internet Archive collections or local folders, browse them from the Downloads tab and download straight into the right console folder, with pause, resume, retries and ZIP/7z extraction. Thorium does not include any source or game catalog.
 - **English and Spanish.**
 
@@ -27,7 +27,7 @@ Thorium finds the games you already have on your Thor, shows them in a library y
 | Library, favorites, dual-screen panel, settings | **Available** |
 | Cover art, regions and game recognition | **Available** |
 | Download manager and your own sources (HTTP, JSON catalog, Internet Archive, local folder) | **Available** |
-| Launching games (Azahar for 3DS) | **Available** |
+| Launching games (Azahar for 3DS, RetroArch/mGBA for GBA) | **Available** |
 | More emulators, choosing between emulators, play history | Next |
 | More sources: SMB, FTP, RomM | Planned |
 

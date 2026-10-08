@@ -6,6 +6,21 @@
       "package": "org.azahar_emu.azahar",
       "activity": "org.citra.citra_emu.activities.EmulationActivity",
       "platforms": ["3ds"]
+    },
+    {
+      "id": "retroarch-gba",
+      "name": "RetroArch (mGBA)",
+      "package": "com.retroarch.aarch64",
+      "activity": "com.retroarch.browser.retroactivity.RetroActivityFuture",
+      "platforms": ["gba"],
+      "action": "android.intent.action.MAIN",
+      "delivery": "path",
+      "extras": {
+        "ROM": "{rom_path}",
+        "LIBRETRO": "/data/user/0/com.retroarch.aarch64/cores/mgba_libretro_android.so",
+        "CONFIGFILE": "/storage/emulated/0/Android/data/com.retroarch.aarch64/files/retroarch.cfg",
+        "QUITFOCUS": ""
+      }
     }
   ]
 }

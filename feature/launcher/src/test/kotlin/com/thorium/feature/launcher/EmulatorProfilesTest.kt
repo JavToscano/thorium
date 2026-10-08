@@ -53,4 +53,24 @@ class EmulatorProfilesTest {
         assertEquals("/g/Kirby.3ds", PrimaryFile.pick(listOf("/g/Kirby.3ds")))
         assertNull(PrimaryFile.pick(emptyList()))
     }
+
+    @Test
+    fun `extras replace the path and address placeholders`() {
+        val out = ExtrasTemplate.expand(
+            mapOf("ROM" to "{rom_path}", "URI" to "{rom_uri}", "CORE" to "/x/core.so", "FLAG" to ""),
+            "/g/Game.gba", "content://a/b",
+        )
+        assertEquals(mapOf("ROM" to "/g/Game.gba", "URI" to "content://a/b", "CORE" to "/x/core.so", "FLAG" to ""), out)
+    }
+
+    @Test
+    fun `a path profile is parsed with its delivery and extras`() {
+        val text = java.io.File("src/main/assets/emulators.json").readText()
+        val ra = EmulatorProfiles.parse(text).single { it.id == "retroarch-gba" }
+        assertEquals(Delivery.Path, ra.delivery)
+        assertEquals("android.intent.action.MAIN", ra.action)
+        assertEquals("{rom_path}", ra.extras["ROM"])
+        assertTrue(ra.extras["LIBRETRO"]!!.endsWith("mgba_libretro_android.so"))
+        assertEquals(Delivery.Uri, EmulatorProfiles.parse(text).single { it.id == "azahar" }.delivery)
+    }
 }

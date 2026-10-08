@@ -32,12 +32,21 @@ class EmulatorLauncher(
         val profile = installedFor(platformId).firstOrNull() ?: return LaunchResult.NoEmulator
         val file = PrimaryFile.pick(paths)?.let(::File)?.takeIf { it.isFile } ?: return LaunchResult.FileMissing
         return try {
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
-            context.grantUriPermission(profile.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            val intent = Intent(profile.action)
-                .setClassName(profile.packageName, profile.activity)
-                .setDataAndType(uri, profile.mimeType)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            val intent = Intent(profile.action).setClassName(profile.packageName, profile.activity)
+            when (profile.delivery) {
+                Delivery.Uri -> {
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+                    context.grantUriPermission(profile.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    intent.setDataAndType(uri, profile.mimeType)
+                    ExtrasTemplate.expand(profile.extras, file.path, uri.toString()).forEach { (k, v) -> intent.putExtra(k, v) }
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                Delivery.Path -> {
+                    ExtrasTemplate.expand(profile.extras, file.path, null).forEach { (k, v) -> intent.putExtra(k, v) }
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                }
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             // The emulator takes over the main screen, where the player is looking.
             val options = ActivityOptions.makeBasic().setLaunchDisplayId(Display.DEFAULT_DISPLAY)
             context.startActivity(intent, options.toBundle())

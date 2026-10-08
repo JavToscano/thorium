@@ -16,7 +16,30 @@ data class EmulatorProfile(
     val platforms: List<String>,
     val action: String = "android.intent.action.VIEW",
     val mimeType: String = "application/octet-stream",
+    /** How the game file reaches the emulator. */
+    val delivery: Delivery = Delivery.Uri,
+    /**
+     * Extra string values for the intent. `{rom_path}` and `{rom_uri}` are replaced with the game's
+     * real path and its content address (see [ExtrasTemplate]).
+     */
+    val extras: Map<String, String> = emptyMap(),
 )
+
+/** How a game file is handed to an emulator. */
+@Serializable
+enum class Delivery {
+    /** A `content://` address with read permission (the emulator needs no storage access). */
+    @SerialName("uri") Uri,
+    /** The file's real path, as an extra (for emulators that read the storage themselves). */
+    @SerialName("path") Path,
+}
+
+object ExtrasTemplate {
+    fun expand(extras: Map<String, String>, romPath: String, romUri: String?): Map<String, String> =
+        extras.mapValues { (_, value) ->
+            value.replace("{rom_path}", romPath).replace("{rom_uri}", romUri.orEmpty())
+        }
+}
 
 @Serializable
 private data class ProfileFile(val emulators: List<EmulatorProfile> = emptyList())
