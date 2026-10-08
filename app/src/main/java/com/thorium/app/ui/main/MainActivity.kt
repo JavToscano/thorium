@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import com.thorium.app.ThoriumApplication
 import com.thorium.app.spike.SpikeActivity
+import com.thorium.app.storage.StoragePermission
 import com.thorium.app.ui.companion.CompanionActivity
 import com.thorium.core.ui.input.dispatchGamepadKey
 import com.thorium.core.ui.theme.ThoriumTheme
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         vm.markMainOpen()
         vm.onOpenDiagnostics = { startActivity(Intent(this, SpikeActivity::class.java)) }
+        vm.onRequestStoragePermission = { StoragePermission.openSettings(this) }
         setContent {
             ThoriumTheme {
                 // Re-evaluated whenever the user toggles "Dual screen" in the menu.
@@ -48,6 +50,12 @@ class MainActivity : ComponentActivity() {
         displays.start()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Also runs when coming back from the system "All files access" screen.
+        vm.refreshLibrary()
+    }
+
     override fun onStop() {
         super.onStop()
         displays.stop()
@@ -56,6 +64,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         vm.onOpenDiagnostics = null
+        vm.onRequestStoragePermission = null
         if (isFinishing) vm.markMainClosed()
     }
 

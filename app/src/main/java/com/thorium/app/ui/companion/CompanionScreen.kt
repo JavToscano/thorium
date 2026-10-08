@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thorium.app.ui.main.AppViewModel
 import com.thorium.app.ui.main.CardModel
+import com.thorium.app.ui.main.gameCountLabel
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
 import com.thorium.core.ui.components.Cover
@@ -73,7 +74,7 @@ private fun GameInfo(game: Game, system: GameSystem, favorite: Boolean) {
 private fun SystemInfo(system: GameSystem, gameCount: Int) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(system.name, color = Palette.TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text("$gameCount games", color = Palette.Accent, fontSize = 14.sp)
+        Text(gameCountLabel(gameCount), color = Palette.Accent, fontSize = 14.sp)
         Text("Press A to browse this system", color = Palette.TextSecondary, fontSize = 12.sp)
         Box(Modifier.weight(1f))
         SectionTitle("Controls")

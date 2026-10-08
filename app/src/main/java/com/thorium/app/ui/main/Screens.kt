@@ -44,7 +44,11 @@ fun ThoriumApp(vm: AppViewModel) {
         Column(Modifier.fillMaxSize()) {
             TabBar(vm.tab)
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                key(vm.tab) { RowsScreen(vm) }
+                if (vm.libraryState is LibraryState.NeedsPermission) {
+                    PermissionScreen()
+                } else {
+                    key(vm.tab) { RowsScreen(vm) }
+                }
             }
             HintBar(
                 listOf("A" to "Select", "B" to "Back", "Y" to "Favorite", "START" to "Menu", "SELECT" to "Options")
@@ -75,7 +79,11 @@ private fun RowsScreen(vm: AppViewModel) {
     val rows = vm.rows
     if (rows.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Nothing here yet. Press Y on a game to add it to Favorites.", color = Palette.TextSecondary, fontSize = 15.sp)
+            Text(
+                vm.emptyMessage,
+                modifier = Modifier.width(520.dp),
+                color = Palette.TextSecondary, fontSize = 15.sp,
+            )
         }
         return
     }
@@ -140,3 +148,23 @@ private fun formatSize(bytes: Long): String =
 
 private fun menuLabel(item: String, vm: AppViewModel): String =
     if (item == "Dual screen") "Dual screen: ${if (vm.companionEnabled) "On" else "Off"}" else item
+
+@Composable
+private fun PermissionScreen() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(Modifier.width(560.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Storage access needed", color = Palette.TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "Thorium reads your game folders (internal storage and SD card) to build your library. " +
+                    "Android calls this \"All files access\". Thorium only scans folders named after " +
+                    "consoles, such as 3ds, gba or switch, and never uploads anything.",
+                color = Palette.TextSecondary, fontSize = 14.sp,
+            )
+            Text(
+                "Press A, turn on the switch for Thorium, then come back with B.",
+                color = Palette.TextSecondary, fontSize = 14.sp,
+            )
+            Box(Modifier.padding(top = 8.dp)) { ActionButton("Open settings", focused = true) }
+        }
+    }
+}

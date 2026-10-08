@@ -93,7 +93,7 @@ private fun SystemTile(card: CardModel.SystemCard, focused: Boolean) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(card.system.shortName, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text("${card.gameCount} games", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+            Text(gameCountLabel(card.gameCount), color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
         }
     }
 }
@@ -118,3 +118,6 @@ fun TabBar(selected: Tab) {
     }
 }
 
+
+/** "1 game" / "N games". */
+fun gameCountLabel(count: Int): String = if (count == 1) "1 game" else "$count games"

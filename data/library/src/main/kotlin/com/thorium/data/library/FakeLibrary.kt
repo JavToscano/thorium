@@ -1,10 +1,11 @@
 package com.thorium.data.library
 
 import com.thorium.core.model.Game
+import com.thorium.core.model.GameFile
 import com.thorium.core.model.GameSystem
 import com.thorium.core.model.Library
 
-/** Placeholder data for Phase 4. Replaced by the real library (Phase 5/6). */
+/** Placeholder data for UI development and tests; the app itself uses [LibraryScanner]. */
 object FakeLibrary {
 
     private val systems = listOf(
@@ -29,11 +30,18 @@ object FakeLibrary {
                     id = "${system.id}-$n",
                     title = "${system.shortName} Sample Game $n",
                     systemId = system.id,
+                    files = listOf(
+                        GameFile(
+                            path = "/storage/emulated/0/ROMs/${system.shortName}/Sample Game $n.zip",
+                            sizeBytes = (50L + index * 37L) * 1_048_576L,
+                            extension = "zip",
+                            isArchive = true,
+                            lastModified = now - index * day / 2,
+                        )
+                    ),
                     addedAt = now - index * day / 2,
                     lastPlayedAt = if (n == 1 && si < 5) now - si * day / 3 else null,
                     progress = if (n == 1 && si < 5) 0.15f + si * 0.17f else null,
-                    sizeBytes = (50L + index * 37L) * 1_048_576L,
-                    path = "/storage/emulated/0/ROMs/${system.shortName}/Sample Game $n.zip",
                 )
             }
         }
