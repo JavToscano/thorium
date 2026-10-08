@@ -30,7 +30,7 @@ sealed interface CardModel {
 
 data class RowModel(val id: String, val title: String, val items: List<CardModel>)
 
-val MENU_ITEMS = listOf("Resume", "Diagnostics", "About")
+val MENU_ITEMS = listOf("Resume", "Dual screen", "Diagnostics", "About")
 val DETAIL_BUTTONS = listOf("Play", "Favorite")
 
 /**
@@ -49,11 +49,29 @@ class AppViewModel : ViewModel() {
     var menuIndex by mutableIntStateOf(0); private set
     var toast by mutableStateOf<String?>(null); private set
 
+    /** User preference: show the companion on the secondary display when one exists. */
+    var companionEnabled by mutableStateOf(true); private set
+
+    /** False once the main activity is finishing, so the companion closes with it. */
+    var mainAlive by mutableStateOf(true); private set
+
+    val companionVisible: Boolean get() = companionEnabled && mainAlive
+
+    fun markMainClosed() { mainAlive = false }
+    fun markMainOpen() { mainAlive = true }
+
     private val rowFocus = mutableStateMapOf<Tab, Int>()
     private val itemFocus = mutableStateMapOf<String, Int>()
     private var toastJob: Job? = null
 
     var onOpenDiagnostics: (() -> Unit)? = null
+
+    /** Card under the logical focus (or the open detail game); drives the companion screen. */
+    val focusedCard: CardModel? get() {
+        detail?.let { return CardModel.GameCard(it, systemOf(it)) }
+        val row = rows.getOrNull(focusedRow) ?: return null
+        return row.items.getOrNull(focusedItem(row))
+    }
 
     fun isFavorite(gameId: String) = gameId in favorites
     fun systemOf(game: Game) = library.system(game.systemId)
@@ -146,6 +164,10 @@ class AppViewModel : ViewModel() {
             GamepadAction.Down -> menuIndex = (menuIndex + 1).coerceAtMost(MENU_ITEMS.size - 1)
             GamepadAction.Select -> {
                 when (MENU_ITEMS[menuIndex]) {
+                    "Dual screen" -> {
+                        companionEnabled = !companionEnabled
+                        showToast(if (companionEnabled) "Dual screen on" else "Dual screen off")
+                    }
                     "Diagnostics" -> onOpenDiagnostics?.invoke()
                     "About" -> showToast("Thorium 0.0.1 - Phase 4 UI prototype")
                 }

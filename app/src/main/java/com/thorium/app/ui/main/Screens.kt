@@ -130,10 +130,13 @@ private fun MenuOverlay(vm: AppViewModel) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("Menu", color = Palette.TextSecondary, fontSize = 13.sp)
-            MENU_ITEMS.forEachIndexed { i, label -> ActionButton(label, focused = vm.menuIndex == i, modifier = Modifier.fillMaxWidth()) }
+            MENU_ITEMS.forEachIndexed { i, item -> ActionButton(menuLabel(item, vm), focused = vm.menuIndex == i, modifier = Modifier.fillMaxWidth()) }
         }
     }
 }
 
 private fun formatSize(bytes: Long): String =
     String.format(Locale.US, "%.1f MB", bytes / 1_048_576.0)
+
+private fun menuLabel(item: String, vm: AppViewModel): String =
+    if (item == "Dual screen") "Dual screen: ${if (vm.companionEnabled) "On" else "Off"}" else item

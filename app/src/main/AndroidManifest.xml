@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
+        android:name=".ThoriumApplication"
         android:label="Thorium"
         android:theme="@style/Theme.Thorium">
 
@@ -18,6 +19,13 @@
         <activity
             android:name=".spike.SpikeActivity"
             android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode" />
+
+        <activity
+            android:name=".ui.companion.CompanionActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.thorium.app.companion"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|density|keyboard|keyboardHidden|navigation|uiMode" />
 
         <activity
