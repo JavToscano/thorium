@@ -218,7 +218,13 @@ class DownloadEngine(
         part.parentFile?.mkdirs()
         java.io.FileOutputStream(part, append).use { out ->
             while (true) {
-                val read = input.read(buffer)
+                // A failing read is the connection dropping (retry and resume); a failing write is the storage.
+                val read = try {
+                    input.read(buffer)
+                } catch (e: IOException) {
+                    currentCoroutineContext().ensureActive()
+                    throw SourceException.Network(e)
+                }
                 if (read < 0) break
                 out.write(buffer, 0, read)
                 done += read

@@ -191,6 +191,35 @@ class DownloadEngineTest {
     }
 
     @Test
+    fun `a connection dropped mid-transfer is retried and resumes from the partial file`() = runBlocking {
+        val offsets = mutableListOf<Long>()
+        val source = object : GameSource by FakeSource(payload) {
+            override fun open(entry: com.thorium.core.model.RemoteEntry, offset: Long): com.thorium.core.model.OpenedStream {
+                offsets += offset
+                if (offsets.size > 1) return FakeSource(payload).open(entry, offset)
+                val broken = object : java.io.InputStream() {
+                    private var sent = 0
+                    override fun read(): Int = throw java.io.IOException("reset")
+                    override fun read(b: ByteArray, off: Int, len: Int): Int {
+                        if (sent >= 50_000) throw java.io.IOException("Connection reset")
+                        val n = minOf(len, 1024, 50_000 - sent)
+                        System.arraycopy(payload, sent, b, off, n)
+                        sent += n
+                        return n
+                    }
+                }
+                return com.thorium.core.model.OpenedStream(broken, payload.size.toLong(), resumed = true)
+            }
+        }
+        val installer = FakeInstaller(gameDir)
+        val id = engine(source, installer).enqueue(item())
+        val done = awaitState(id, DownloadState.Completed)
+        assertEquals(1, done.retries)
+        assertEquals(listOf(0L, 50_000L), offsets)
+        assertTrue(installer.installed.single().second.contentEquals(payload))
+    }
+
+    @Test
     fun `cancel stops the transfer and deletes the partial file`() = runBlocking {
         val source = FakeSource(payload, chunkDelayMs = 5, chunk = 2048)
         val e = engine(source)
