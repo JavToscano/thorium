@@ -28,14 +28,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.thorium.app.R
 import com.thorium.app.ui.settings.SettingsScreen
 import com.thorium.core.model.Game
 import com.thorium.core.ui.components.ActionButton
 import com.thorium.core.ui.components.Cover
 import com.thorium.core.ui.components.HintBar
 import com.thorium.core.ui.theme.Dimens
+import com.thorium.core.ui.text.resolve
 import com.thorium.core.ui.theme.Palette
 import java.util.Locale
 
@@ -53,7 +57,7 @@ fun ThoriumApp(vm: AppViewModel) {
                     key(vm.tab) { RowsScreen(vm) }
                 }
             }
-            HintBar(vm.hints)
+            HintBar(vm.hints.map { it.button to stringResource(it.label) })
         }
 
         AnimatedVisibility(vm.detail != null, enter = fadeIn() + scaleIn(initialScale = 0.96f), exit = fadeOut() + scaleOut(targetScale = 0.96f)) {
@@ -67,7 +71,7 @@ fun ThoriumApp(vm: AppViewModel) {
             enter = fadeIn(), exit = fadeOut(),
         ) {
             Text(
-                vm.toast.orEmpty(),
+                vm.toast?.resolve().orEmpty(),
                 modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Palette.Panel).padding(horizontal = 18.dp, vertical = 8.dp),
                 color = Palette.TextPrimary, fontSize = 14.sp,
             )
@@ -81,7 +85,7 @@ private fun RowsScreen(vm: AppViewModel) {
     if (rows.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                vm.emptyMessage,
+                stringResource(vm.emptyMessage),
                 modifier = Modifier.width(520.dp),
                 color = Palette.TextSecondary, fontSize = 15.sp,
             )
@@ -117,13 +121,14 @@ private fun DetailScreen(game: Game, vm: AppViewModel) {
                 Text(formatSize(game.sizeBytes), color = Palette.TextSecondary, fontSize = 13.sp)
                 Text(game.path, color = Palette.TextSecondary, fontSize = 12.sp)
                 Text(
-                    game.progress?.let { "Progress ${(it * 100).toInt()}%" } ?: "Not played yet",
+                    game.progress?.let { stringResource(R.string.detail_progress, (it * 100).toInt()) }
+                        ?: stringResource(R.string.detail_not_played),
                     color = Palette.TextSecondary, fontSize = 13.sp,
                 )
                 Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     DETAIL_BUTTONS.forEachIndexed { i, label ->
-                        val text = if (i == 1 && vm.isFavorite(game.id)) "Unfavorite" else label
-                        ActionButton(text, focused = vm.detailFocus == i)
+                        val text = if (i == 1 && vm.isFavorite(game.id)) R.string.detail_unfavorite else label
+                        ActionButton(stringResource(text), focused = vm.detailFocus == i)
                     }
                 }
             }
@@ -138,8 +143,8 @@ private fun MenuOverlay(vm: AppViewModel) {
             Modifier.width(260.dp).clip(RoundedCornerShape(14.dp)).background(Palette.Panel).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Menu", color = Palette.TextSecondary, fontSize = 13.sp)
-            MENU_ITEMS.forEachIndexed { i, item -> ActionButton(item, focused = vm.menuIndex == i, modifier = Modifier.fillMaxWidth()) }
+            Text(stringResource(R.string.menu_title), color = Palette.TextSecondary, fontSize = 13.sp)
+            MenuItem.entries.forEachIndexed { i, item -> ActionButton(stringResource(item.label), focused = vm.menuIndex == i, modifier = Modifier.fillMaxWidth()) }
         }
     }
 }
@@ -151,18 +156,10 @@ private fun formatSize(bytes: Long): String =
 private fun PermissionScreen() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(Modifier.width(560.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Storage access needed", color = Palette.TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text(
-                "Thorium reads your game folders (internal storage and SD card) to build your library. " +
-                    "Android calls this \"All files access\". Thorium only scans folders named after " +
-                    "consoles, such as 3ds, gba or switch, and never uploads anything.",
-                color = Palette.TextSecondary, fontSize = 14.sp,
-            )
-            Text(
-                "Press A, turn on the switch for Thorium, then come back with B.",
-                color = Palette.TextSecondary, fontSize = 14.sp,
-            )
-            Box(Modifier.padding(top = 8.dp)) { ActionButton("Open settings", focused = true) }
+            Text(stringResource(R.string.perm_title), color = Palette.TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.perm_body), color = Palette.TextSecondary, fontSize = 14.sp)
+            Text(stringResource(R.string.perm_steps), color = Palette.TextSecondary, fontSize = 14.sp)
+            Box(Modifier.padding(top = 8.dp)) { ActionButton(stringResource(R.string.perm_button), focused = true) }
         }
     }
 }

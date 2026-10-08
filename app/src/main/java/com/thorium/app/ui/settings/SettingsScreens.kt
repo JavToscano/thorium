@@ -26,7 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.thorium.app.ui.main.gameCountLabel
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.thorium.app.R
+import com.thorium.app.ui.main.LanguageChoice
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
 import com.thorium.data.library.SetupEntry
@@ -91,35 +94,56 @@ private fun ListRow(title: String, detail: String?, focused: Boolean, trailing: 
 
 @Composable
 private fun MainPage(c: SettingsController) {
-    PageFrame("Settings", null) {
-        FocusList(c.mainItems, c.mainIndex) { _, (label, detail), focused ->
-            // "Dual screen" shows its state on the right; the others show a description underneath.
-            if (label == "Dual screen") ListRow(label, "Show game details on the second display", focused, trailing = detail)
-            else ListRow(label, detail, focused)
+    PageFrame(stringResource(R.string.settings_title), null) {
+        FocusList(c.mainItems, c.mainIndex) { _, item, focused ->
+            val title = stringResource(item.title)
+            val version = "0.0.1"
+            val description = item.description?.let { stringResource(it, version) }
+            when (item) {
+                // These two show their current value on the right of the row.
+                SettingsItem.DualScreen -> ListRow(
+                    title, description, focused,
+                    trailing = stringResource(if (c.companionOn) R.string.value_on else R.string.value_off),
+                )
+                SettingsItem.Language -> ListRow(title, description, focused, trailing = languageName(c.languageChoice))
+                else -> ListRow(title, description, focused)
+            }
         }
     }
 }
 
 @Composable
+private fun languageName(choice: LanguageChoice): String = stringResource(
+    when (choice) {
+        LanguageChoice.System -> R.string.language_system
+        LanguageChoice.English -> R.string.language_english
+        LanguageChoice.Spanish -> R.string.language_spanish
+    }
+)
+
+@Composable
 private fun FoldersPage(c: SettingsController) {
-    PageFrame(
-        "Game folders",
-        "Thorium looks for folders named after consoles (gba, 3ds, switch...) inside these locations.",
-    ) {
+    PageFrame(stringResource(R.string.folders_title), stringResource(R.string.folders_subtitle)) {
         FocusList(c.folderRows, c.foldersIndex) { _, row, focused ->
             when (row) {
                 is FolderRow.AutoDetect -> ListRow(
-                    title = "Scan all storage automatically",
-                    detail = row.volumes.joinToString(" - ") { "${it.label} (${it.dir.path})" }.ifEmpty { "No storage found" },
+                    title = stringResource(R.string.folders_auto_title),
+                    detail = row.volumes.joinToString(" · ") { "${it.label} (${it.dir.path})" }
+                        .ifEmpty { stringResource(R.string.folders_no_storage) },
                     focused = focused,
-                    trailing = if (row.enabled) "On" else "Off",
+                    trailing = stringResource(if (row.enabled) R.string.value_on else R.string.value_off),
                 )
                 is FolderRow.Custom -> ListRow(
                     row.path,
-                    "${gameCountLabel(row.gameCount)} - press A to create console folders here",
+                    stringResource(
+                        R.string.folders_custom_detail,
+                        pluralStringResource(R.plurals.games_count, row.gameCount, row.gameCount),
+                    ),
                     focused,
                 )
-                FolderRow.Add -> ListRow("Add folder...", "Browse storage and pick a folder", focused)
+                FolderRow.Add -> ListRow(
+                    stringResource(R.string.folders_add_title), stringResource(R.string.folders_add_desc), focused,
+                )
             }
         }
     }
@@ -127,10 +151,10 @@ private fun FoldersPage(c: SettingsController) {
 
 @Composable
 private fun BrowserPage(c: SettingsController) {
-    PageFrame("Pick a folder", c.browserDir?.path ?: "Storage") {
+    PageFrame(stringResource(R.string.browser_title), c.browserDir?.path ?: stringResource(R.string.browser_storage)) {
         if (c.browserEntries.isEmpty()) {
             Text(
-                "No sub-folders here. Press Y to use this folder, or B to go up.",
+                stringResource(R.string.browser_empty),
                 modifier = Modifier.padding(top = 16.dp),
                 color = Palette.TextSecondary, fontSize = 14.sp,
             )
@@ -145,27 +169,28 @@ private fun BrowserPage(c: SettingsController) {
 @Composable
 private fun SetupPage(c: SettingsController) {
     val creatable = c.setupEntries.count { it.existingName == null }
-    PageFrame(
-        "Set up folder",
-        "${c.setupPath} - tick the consoles you want and Thorium creates their folders.",
-    ) {
+    PageFrame(stringResource(R.string.setup_title), stringResource(R.string.setup_subtitle, c.setupPath)) {
         // Row 0 is the action; the rest are the consoles.
         val rows = listOf<SetupEntry?>(null) + c.setupEntries
         FocusList(rows, c.setupIndex) { _, entry, focused ->
             if (entry == null) {
                 ListRow(
-                    title = "Create ${folderCount(c.setupSelected.size)}",
-                    detail = if (creatable == 0) "Every console already has a folder" else "Folders are named gba, 3ds, switch...",
+                    title = pluralStringResource(R.plurals.setup_create, c.setupSelected.size, c.setupSelected.size),
+                    detail = stringResource(if (creatable == 0) R.string.setup_all_exist else R.string.setup_names_hint),
                     focused = focused,
                 )
             } else {
                 val existing = entry.existingName
                 ListRow(
                     title = entry.platform.system.name,
-                    detail = if (existing != null) "Already exists: $existing" else "Folder: ${entry.platform.id}",
+                    detail = if (existing != null) {
+                        stringResource(R.string.setup_exists_detail, existing)
+                    } else {
+                        stringResource(R.string.setup_folder_detail, entry.platform.id)
+                    },
                     focused = focused,
                     trailing = when {
-                        existing != null -> "Exists"
+                        existing != null -> stringResource(R.string.setup_exists_badge)
                         entry.platform.id in c.setupSelected -> "[x]"
                         else -> "[ ]"
                     },
@@ -174,5 +199,3 @@ private fun SetupPage(c: SettingsController) {
         }
     }
 }
-
-private fun folderCount(count: Int) = if (count == 1) "1 folder" else "$count folders"

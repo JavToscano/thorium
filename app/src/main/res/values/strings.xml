@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_systems">Systems</string>
+    <string name="tab_favorites">Favorites</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Home rows -->
+    <string name="row_continue">Continue Playing</string>
+    <string name="row_systems">Systems</string>
+    <string name="row_recent">Recently Added</string>
+    <string name="row_favorites">Favorites</string>
+
+    <!-- Button legend (the button names themselves, such as A or START, are not translated) -->
+    <string name="hint_select">Select</string>
+    <string name="hint_back">Back</string>
+    <string name="hint_favorite">Favorite</string>
+    <string name="hint_menu">Menu</string>
+    <string name="hint_options">Options</string>
+    <string name="hint_close">Close</string>
+    <string name="hint_open_settings">Open settings</string>
+    <string name="hint_home">Home</string>
+    <string name="hint_tabs">Tabs</string>
+    <string name="hint_move">Move</string>
+    <string name="hint_remove_folder">Remove folder</string>
+    <string name="hint_open">Open</string>
+    <string name="hint_use_folder">Use this folder</string>
+    <string name="hint_up">Up</string>
+    <string name="hint_toggle_create">Toggle / Create</string>
+    <string name="hint_all_none">All / None</string>
+
+    <!-- START menu -->
+    <string name="menu_title">Menu</string>
+    <string name="menu_resume">Resume</string>
+    <string name="menu_rescan">Rescan library</string>
+    <string name="menu_settings">Settings</string>
+
+    <!-- Game detail -->
+    <string name="detail_play">Play</string>
+    <string name="detail_favorite">Favorite</string>
+    <string name="detail_unfavorite">Unfavorite</string>
+    <string name="detail_progress">Progress %1$d%%</string>
+    <string name="detail_not_played">Not played yet</string>
+
+    <!-- Toasts -->
+    <string name="toast_secondary_soon">Secondary actions arrive later</string>
+    <string name="toast_launcher_soon">Launcher arrives in Phase 11</string>
+    <string name="toast_added_favorite">Added to Favorites</string>
+    <string name="toast_removed_favorite">Removed from Favorites</string>
+    <plurals name="toast_games_found">
+        <item quantity="one">%1$d game found (%2$d ms)</item>
+        <item quantity="other">%1$d games found (%2$d ms)</item>
+    </plurals>
+    <plurals name="toast_games_found_new">
+        <item quantity="one">%1$d game found, %2$d new (%3$d ms)</item>
+        <item quantity="other">%1$d games found, %2$d new (%3$d ms)</item>
+    </plurals>
+    <string name="toast_root_added">Added %1$s</string>
+    <string name="toast_root_removed">Removed %1$s</string>
+    <string name="toast_dual_on">Dual screen on</string>
+    <string name="toast_dual_off">Dual screen off</string>
+    <string name="toast_already_listed">Already in the list</string>
+    <string name="toast_nothing_to_create">Nothing to create</string>
+    <plurals name="toast_created_folders">
+        <item quantity="one">Created %1$d folder</item>
+        <item quantity="other">Created %1$d folders</item>
+    </plurals>
+    <string name="toast_created_partial">Created %1$d, could not create: %2$s</string>
+    <string name="toast_about">Thorium %1$s</string>
+
+    <!-- Empty states -->
+    <string name="empty_scanning">Scanning your library…</string>
+    <string name="empty_favorites">Nothing here yet. Press Y on a game to add it to Favorites.</string>
+    <string name="empty_no_games">No games found. Put your games in folders such as 3ds, gba or switch on the SD card or internal storage, then choose Rescan library in the menu.</string>
+
+    <!-- Storage permission -->
+    <string name="perm_title">Storage access needed</string>
+    <string name="perm_body">Thorium reads your game folders (internal storage and SD card) to build your library. Android calls this \"All files access\". Thorium only scans folders named after consoles, such as 3ds, gba or switch, and never uploads anything.</string>
+    <string name="perm_steps">Press A, turn on the switch for Thorium, then come back with B.</string>
+    <string name="perm_button">Open settings</string>
+
+    <!-- Counts -->
+    <plurals name="games_count">
+        <item quantity="one">%1$d game</item>
+        <item quantity="other">%1$d games</item>
+    </plurals>
+    <plurals name="folders_count">
+        <item quantity="one">%1$d folder</item>
+        <item quantity="other">%1$d folders</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_folders_title">Game folders</string>
+    <string name="settings_folders_desc">Choose where Thorium looks for games</string>
+    <string name="settings_dual_title">Dual screen</string>
+    <string name="settings_dual_desc">Show game details on the second display</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_desc">Applies to the whole app</string>
+    <string name="settings_rescan_title">Rescan library</string>
+    <string name="settings_diag_title">Diagnostics</string>
+    <string name="settings_diag_desc">Displays and controller tester (English only)</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_desc">Thorium %1$s</string>
+    <string name="value_on">On</string>
+    <string name="value_off">Off</string>
+    <string name="language_system">System default</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_spanish" translatable="false">Español</string>
+
+    <!-- Game folders -->
+    <string name="folders_title">Game folders</string>
+    <string name="folders_subtitle">Thorium looks for folders named after consoles (gba, 3ds, switch…) inside these locations.</string>
+    <string name="folders_auto_title">Scan all storage automatically</string>
+    <string name="folders_no_storage">No storage found</string>
+    <string name="folders_custom_detail">%1$s · press A to create console folders here</string>
+    <string name="folders_add_title">Add folder…</string>
+    <string name="folders_add_desc">Browse storage and pick a folder</string>
+    <string name="sd_card_label">SD card (%1$s)</string>
+
+    <!-- Folder browser -->
+    <string name="browser_title">Pick a folder</string>
+    <string name="browser_storage">Storage</string>
+    <string name="browser_empty">No sub-folders here. Press Y to use this folder, or B to go up.</string>
+
+    <!-- Set up folder -->
+    <string name="setup_title">Set up folder</string>
+    <string name="setup_subtitle">%1$s · tick the consoles you want and Thorium creates their folders.</string>
+    <plurals name="setup_create">
+        <item quantity="one">Create %1$d folder</item>
+        <item quantity="other">Create %1$d folders</item>
+    </plurals>
+    <string name="setup_all_exist">Every console already has a folder</string>
+    <string name="setup_names_hint">Folders are named gba, 3ds, switch…</string>
+    <string name="setup_exists_detail">Already exists: %1$s</string>
+    <string name="setup_folder_detail">Folder: %1$s</string>
+    <string name="setup_exists_badge">Exists</string>
+
+    <!-- Companion (bottom screen) -->
+    <string name="companion_screenshots">Screenshots</string>
+    <string name="companion_soon">soon</string>
+    <string name="companion_controls">Controls</string>
+    <string name="companion_browse_system">Press A to browse this system</string>
+    <string name="companion_select_game">Select a game on the top screen</string>
+    <string name="companion_settings_top">Settings are on the top screen</string>
+</resources>

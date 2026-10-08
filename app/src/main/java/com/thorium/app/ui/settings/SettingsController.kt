@@ -4,7 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.annotation.StringRes
+import com.thorium.app.R
 import com.thorium.app.storage.StorageVolumeInfo
+import com.thorium.app.ui.main.Hint
+import com.thorium.app.ui.main.LanguageChoice
+import com.thorium.app.ui.main.LanguageController
+import com.thorium.core.ui.text.UiText
 import com.thorium.core.ui.input.GamepadAction
 import com.thorium.data.library.FolderInitializer
 import com.thorium.data.library.SetupEntry
@@ -17,6 +23,16 @@ sealed interface FolderRow {
     data class AutoDetect(val enabled: Boolean, val volumes: List<StorageVolumeInfo>) : FolderRow
     data class Custom(val path: String, val gameCount: Int) : FolderRow
     data object Add : FolderRow
+}
+
+/** Rows of the main Settings page. */
+enum class SettingsItem(@StringRes val title: Int, @StringRes val description: Int?) {
+    Folders(R.string.settings_folders_title, R.string.settings_folders_desc),
+    DualScreen(R.string.settings_dual_title, R.string.settings_dual_desc),
+    Language(R.string.settings_language_title, R.string.settings_language_desc),
+    Rescan(R.string.settings_rescan_title, null),
+    Diagnostics(R.string.settings_diag_title, R.string.settings_diag_desc),
+    About(R.string.settings_about_title, R.string.settings_about_desc),
 }
 
 /** A folder shown in the folder browser. */
@@ -35,7 +51,9 @@ interface SettingsHost {
     fun setCompanionEnabled(enabled: Boolean)
     fun rescan()
     fun openDiagnostics()
-    fun toast(message: String)
+    fun toast(message: UiText)
+    val language: LanguageController?
+    fun cycleLanguage()
 }
 
 /**
@@ -43,6 +61,10 @@ interface SettingsHost {
  * browser. Like the rest of the UI it is driven only by [GamepadAction]s.
  */
 class SettingsController(private val host: SettingsHost) {
+
+    private companion object {
+        const val VERSION = "0.0.1"
+    }
 
     private val initializer = FolderInitializer()
 
@@ -61,14 +83,19 @@ class SettingsController(private val host: SettingsHost) {
     var setupSelected by mutableStateOf<Set<String>>(emptySet()); private set
     var setupIndex by mutableIntStateOf(0); private set
 
-    val mainItems: List<Pair<String, String?>>
-        get() = listOf(
-            "Game folders" to "Choose where Thorium looks for games",
-            "Dual screen" to if (host.companionEnabled) "On" else "Off",
-            "Rescan library" to null,
-            "Diagnostics" to "Displays and controller tester",
-            "About" to "Thorium 0.0.1",
-        )
+    val companionOn: Boolean get() = host.companionEnabled
+    val languageChoice: LanguageChoice get() = host.language?.current() ?: LanguageChoice.System
+
+    /** Rows of the main page, in order; the Language row only exists when the system supports it. */
+    val mainItems: List<SettingsItem>
+        get() = buildList {
+            add(SettingsItem.Folders)
+            add(SettingsItem.DualScreen)
+            if (host.language != null) add(SettingsItem.Language)
+            add(SettingsItem.Rescan)
+            add(SettingsItem.Diagnostics)
+            add(SettingsItem.About)
+        }
 
     val folderRows: List<FolderRow>
         get() = buildList {
@@ -77,12 +104,21 @@ class SettingsController(private val host: SettingsHost) {
             add(FolderRow.Add)
         }
 
-    val hints: List<Pair<String, String>>
+    val hints: List<Hint>
         get() = when (page) {
-            SettingsPage.Main -> listOf("A" to "Select", "B" to "Home", "L1/R1" to "Tabs", "START" to "Menu")
-            SettingsPage.Folders -> listOf("A" to "Select", "Y" to "Remove folder", "B" to "Back")
-            SettingsPage.Browser -> listOf("A" to "Open", "Y" to "Use this folder", "B" to "Up")
-            SettingsPage.Setup -> listOf("A" to "Toggle / Create", "Y" to "All / None", "B" to "Back")
+            SettingsPage.Main -> listOf(
+                Hint("A", R.string.hint_select), Hint("B", R.string.hint_home),
+                Hint("L1/R1", R.string.hint_tabs), Hint("START", R.string.hint_menu),
+            )
+            SettingsPage.Folders -> listOf(
+                Hint("A", R.string.hint_select), Hint("Y", R.string.hint_remove_folder), Hint("B", R.string.hint_back),
+            )
+            SettingsPage.Browser -> listOf(
+                Hint("A", R.string.hint_open), Hint("Y", R.string.hint_use_folder), Hint("B", R.string.hint_up),
+            )
+            SettingsPage.Setup -> listOf(
+                Hint("A", R.string.hint_toggle_create), Hint("Y", R.string.hint_all_none), Hint("B", R.string.hint_back),
+            )
         }
 
     /** Leaves any sub-page; called when the tab is entered again from elsewhere. */
@@ -103,12 +139,13 @@ class SettingsController(private val host: SettingsHost) {
         when (action) {
             GamepadAction.Up -> mainIndex = (mainIndex - 1).coerceAtLeast(0)
             GamepadAction.Down -> mainIndex = (mainIndex + 1).coerceAtMost(count - 1)
-            GamepadAction.Select -> when (mainItems[mainIndex].first) {
-                "Game folders" -> { page = SettingsPage.Folders; foldersIndex = 0 }
-                "Dual screen" -> host.setCompanionEnabled(!host.companionEnabled)
-                "Rescan library" -> host.rescan()
-                "Diagnostics" -> host.openDiagnostics()
-                "About" -> host.toast("Thorium 0.0.1")
+            GamepadAction.Select -> when (mainItems[mainIndex]) {
+                SettingsItem.Folders -> { page = SettingsPage.Folders; foldersIndex = 0 }
+                SettingsItem.DualScreen -> host.setCompanionEnabled(!host.companionEnabled)
+                SettingsItem.Language -> host.cycleLanguage()
+                SettingsItem.Rescan -> host.rescan()
+                SettingsItem.Diagnostics -> host.openDiagnostics()
+                SettingsItem.About -> host.toast(UiText.res(R.string.toast_about, VERSION))
             }
             else -> return false
         }
@@ -182,7 +219,7 @@ class SettingsController(private val host: SettingsHost) {
     private fun addCurrentSelection() {
         val target = browserEntries.getOrNull(browserIndex)?.dir ?: browserDir ?: return
         if (target.path in host.customRoots) {
-            host.toast("Already in the list")
+            host.toast(UiText.res(R.string.toast_already_listed))
             return
         }
         host.addRoot(target.path)
@@ -224,16 +261,15 @@ class SettingsController(private val host: SettingsHost) {
 
     private fun createSelectedFolders() {
         if (setupSelected.isEmpty()) {
-            host.toast("Nothing to create")
+            host.toast(UiText.res(R.string.toast_nothing_to_create))
             return
         }
         val result = initializer.create(File(setupPath), setupSelected)
         host.toast(
-            when {
-                result.failed.isNotEmpty() ->
-                    "Created ${result.created.size}, could not create: ${result.failed.joinToString()}"
-                result.created.size == 1 -> "Created 1 folder"
-                else -> "Created ${result.created.size} folders"
+            if (result.failed.isNotEmpty()) {
+                UiText.res(R.string.toast_created_partial, result.created.size, result.failed.joinToString())
+            } else {
+                UiText.plural(R.plurals.toast_created_folders, result.created.size)
             }
         )
         page = SettingsPage.Folders

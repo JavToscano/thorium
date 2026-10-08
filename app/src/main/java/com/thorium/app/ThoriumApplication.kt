@@ -1,6 +1,7 @@
 package com.thorium.app
 
 import android.app.Application
+import android.os.Build
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -23,6 +24,7 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
             it.storageRoots = { StorageRoots.detect(this) }
             it.storageVolumes = { StorageRoots.volumes(this) }
             it.attachData(ThoriumData.create(this))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) it.languageController = AppLanguage(this)
         }
     }
 }

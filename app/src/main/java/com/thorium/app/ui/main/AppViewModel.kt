@@ -1,5 +1,6 @@
 package com.thorium.app.ui.main
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -10,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
 import com.thorium.core.model.Library
+import com.thorium.app.R
 import com.thorium.app.storage.StorageVolumeInfo
 import com.thorium.app.ui.settings.SettingsController
 import com.thorium.app.ui.settings.SettingsHost
@@ -19,6 +21,7 @@ import com.thorium.data.library.LibraryScanner
 import com.thorium.data.library.PlatformCatalog
 import com.thorium.data.library.ScanStats
 import com.thorium.core.ui.input.GamepadAction
+import com.thorium.core.ui.text.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,7 +30,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 
-enum class Tab(val title: String) { Home("Home"), Systems("Systems"), Favorites("Favorites"), Settings("Settings") }
+enum class Tab(@StringRes val title: Int) {
+    Home(R.string.tab_home),
+    Systems(R.string.tab_systems),
+    Favorites(R.string.tab_favorites),
+    Settings(R.string.tab_settings),
+}
 
 sealed interface CardModel {
     val key: String
@@ -39,10 +47,33 @@ sealed interface CardModel {
     }
 }
 
-data class RowModel(val id: String, val title: String, val items: List<CardModel>)
+/** A horizontal row of cards; [title] is null for continuation rows that have no heading. */
+data class RowModel(val id: String, val title: UiText?, val items: List<CardModel>)
 
-val MENU_ITEMS = listOf("Resume", "Rescan library", "Settings")
-val DETAIL_BUTTONS = listOf("Play", "Favorite")
+enum class MenuItem(@StringRes val label: Int) {
+    Resume(R.string.menu_resume),
+    Rescan(R.string.menu_rescan),
+    Settings(R.string.menu_settings),
+}
+
+/** One entry of the button legend: the button name is shown as is, the label is translated. */
+data class Hint(val button: String, @StringRes val label: Int)
+/** Detail screen buttons: Play, then Favorite (its label flips to "Unfavorite" in the UI). */
+val DETAIL_BUTTONS = listOf(R.string.detail_play, R.string.detail_favorite)
+
+enum class LanguageChoice { System, English, Spanish }
+
+/** Per-app language, implemented by the application on top of the system's locale manager. */
+interface LanguageController {
+    fun current(): LanguageChoice
+    fun set(choice: LanguageChoice)
+
+    /** Moves to the next choice (System, English, Spanish, back to System). */
+    fun cycle() {
+        val all = LanguageChoice.entries
+        set(all[(current().ordinal + 1) % all.size])
+    }
+}
 
 sealed interface LibraryState {
     data object NeedsPermission : LibraryState
@@ -108,7 +139,7 @@ class AppViewModel : ViewModel() {
     var detailFocus by mutableIntStateOf(0); private set
     var menuOpen by mutableStateOf(false); private set
     var menuIndex by mutableIntStateOf(0); private set
-    var toast by mutableStateOf<String?>(null); private set
+    var toast by mutableStateOf<UiText?>(null); private set
 
     /** User preference (persisted): show the companion on the secondary display when one exists. */
     var companionEnabled by mutableStateOf(true); private set
@@ -126,6 +157,9 @@ class AppViewModel : ViewModel() {
     private var toastJob: Job? = null
 
     var onOpenDiagnostics: (() -> Unit)? = null
+
+    /** Wired by the application; null when per-app language is not available (Android < 13). */
+    var languageController: LanguageController? = null
 
     val settings = SettingsController(object : SettingsHost {
         override val autoDetectStorage get() = scanSettings.autoDetectStorage
@@ -145,7 +179,7 @@ class AppViewModel : ViewModel() {
         override fun addRoot(path: String) {
             viewModelScope.launch {
                 data?.settings?.addScanRoot(path)
-                showToast("Added $path")
+                showToast(UiText.res(R.string.toast_root_added, path))
                 refreshLibrary(force = true)
             }
         }
@@ -153,7 +187,7 @@ class AppViewModel : ViewModel() {
         override fun removeRoot(path: String) {
             viewModelScope.launch {
                 data?.settings?.removeScanRoot(path)
-                showToast("Removed $path")
+                showToast(UiText.res(R.string.toast_root_removed, path))
                 refreshLibrary(force = true)
             }
         }
@@ -161,21 +195,30 @@ class AppViewModel : ViewModel() {
         override fun setCompanionEnabled(enabled: Boolean) {
             this@AppViewModel.companionEnabled = enabled
             viewModelScope.launch { data?.settings?.setCompanionEnabled(enabled) }
-            showToast(if (enabled) "Dual screen on" else "Dual screen off")
+            showToast(UiText.res(if (enabled) R.string.toast_dual_on else R.string.toast_dual_off))
         }
 
         override fun rescan() = refreshLibrary(force = true)
         override fun openDiagnostics() { onOpenDiagnostics?.invoke() }
-        override fun toast(message: String) = showToast(message)
+        override fun toast(message: UiText) = showToast(message)
+        override val language get() = languageController
+        override fun cycleLanguage() { languageController?.cycle() }
     })
 
     /** Button legend for whatever is on screen. */
-    val hints: List<Pair<String, String>> get() = when {
-        menuOpen -> listOf("A" to "Select", "B" to "Close")
-        libraryState is LibraryState.NeedsPermission -> listOf("A" to "Open settings", "START" to "Menu")
-        detail != null -> listOf("A" to "Select", "B" to "Back", "Y" to "Favorite", "START" to "Menu")
+    val hints: List<Hint> get() = when {
+        menuOpen -> listOf(Hint("A", R.string.hint_select), Hint("B", R.string.hint_close))
+        libraryState is LibraryState.NeedsPermission ->
+            listOf(Hint("A", R.string.hint_open_settings), Hint("START", R.string.hint_menu))
+        detail != null -> listOf(
+            Hint("A", R.string.hint_select), Hint("B", R.string.hint_back),
+            Hint("Y", R.string.hint_favorite), Hint("START", R.string.hint_menu),
+        )
         tab == Tab.Settings -> settings.hints
-        else -> listOf("A" to "Select", "B" to "Back", "Y" to "Favorite", "START" to "Menu", "SELECT" to "Options")
+        else -> listOf(
+            Hint("A", R.string.hint_select), Hint("B", R.string.hint_back), Hint("Y", R.string.hint_favorite),
+            Hint("START", R.string.hint_menu), Hint("SELECT", R.string.hint_options),
+        )
     }
 
     /** Card under the logical focus (or the open detail game); drives the companion screen. */
@@ -191,11 +234,11 @@ class AppViewModel : ViewModel() {
     val rows: List<RowModel> get() = buildRows(tab)
 
     /** Text shown when the current tab has nothing to display. */
-    val emptyMessage: String get() = when {
-        libraryState is LibraryState.Scanning -> "Scanning your library..."
-        tab == Tab.Favorites -> "Nothing here yet. Press Y on a game to add it to Favorites."
-        else -> "No games found. Put your games in folders such as 3ds, gba or switch on the SD card " +
-            "or internal storage, then choose Rescan library in the menu."
+    @get:StringRes
+    val emptyMessage: Int get() = when {
+        libraryState is LibraryState.Scanning -> R.string.empty_scanning
+        tab == Tab.Favorites -> R.string.empty_favorites
+        else -> R.string.empty_no_games
     }
 
     /**
@@ -220,8 +263,14 @@ class AppViewModel : ViewModel() {
             // The UI updates itself through the repository's flows once the sync commits.
             val summary = data?.library?.sync(result.library.games)
             libraryState = LibraryState.Ready(result.stats)
-            val news = summary?.added?.takeIf { it > 0 }?.let { ", $it new" }.orEmpty()
-            showToast("${result.stats.games} games found$news (${result.stats.durationMs} ms)")
+            val added = summary?.added ?: 0
+            showToast(
+                if (added > 0) {
+                    UiText.plural(R.plurals.toast_games_found_new, result.stats.games, added, result.stats.durationMs)
+                } else {
+                    UiText.plural(R.plurals.toast_games_found, result.stats.games, result.stats.durationMs)
+                }
+            )
             if (rescanQueued) {
                 rescanQueued = false
                 refreshLibrary(force = true)
@@ -250,20 +299,20 @@ class AppViewModel : ViewModel() {
                 val continuePlaying = library.games.filter { it.lastPlayedAt != null }
                     .sortedByDescending { it.lastPlayedAt }.take(6)
                 if (continuePlaying.isNotEmpty())
-                    add(RowModel("continue", "Continue Playing", gameCards(continuePlaying)))
-                add(RowModel("systems", "Systems", library.systems.map { s ->
+                    add(RowModel("continue", UiText.res(R.string.row_continue), gameCards(continuePlaying)))
+                add(RowModel("systems", UiText.res(R.string.row_systems), library.systems.map { s ->
                     CardModel.SystemCard(s, library.games.count { it.systemId == s.id })
                 }))
-                add(RowModel("recent", "Recently Added", gameCards(library.games.sortedByDescending { it.addedAt }.take(10))))
+                add(RowModel("recent", UiText.res(R.string.row_recent), gameCards(library.games.sortedByDescending { it.addedAt }.take(10))))
                 val favs = favoriteGames()
-                if (favs.isNotEmpty()) add(RowModel("favorites", "Favorites", gameCards(favs)))
+                if (favs.isNotEmpty()) add(RowModel("favorites", UiText.res(R.string.row_favorites), gameCards(favs)))
             }
             Tab.Systems -> library.systems.mapNotNull { s ->
                 val games = library.games.filter { it.systemId == s.id }
-                if (games.isEmpty()) null else RowModel("sys-${s.id}", s.name, gameCards(games))
+                if (games.isEmpty()) null else RowModel("sys-${s.id}", UiText.Raw(s.name), gameCards(games))
             }
             Tab.Favorites -> favoriteGames().chunked(6).mapIndexed { i, chunk ->
-                RowModel("fav-$i", if (i == 0) "Favorites" else "", gameCards(chunk))
+                RowModel("fav-$i", if (i == 0) UiText.res(R.string.row_favorites) else null, gameCards(chunk))
             }
             Tab.Settings -> emptyList()
         }
@@ -309,7 +358,7 @@ class AppViewModel : ViewModel() {
             GamepadAction.Back -> if (tab != Tab.Home) tab = Tab.Home
             GamepadAction.Menu -> openMenu()
             GamepadAction.Favorite -> focusedGame()?.let { toggleFavorite(it) }
-            GamepadAction.Secondary -> showToast("Secondary actions arrive later")
+            GamepadAction.Secondary -> showToast(UiText.res(R.string.toast_secondary_soon))
         }
     }
 
@@ -330,7 +379,7 @@ class AppViewModel : ViewModel() {
             GamepadAction.Left -> detailFocus = (detailFocus - 1).coerceAtLeast(0)
             GamepadAction.Right -> detailFocus = (detailFocus + 1).coerceAtMost(DETAIL_BUTTONS.size - 1)
             GamepadAction.Select ->
-                if (detailFocus == 0) showToast("Launcher arrives in Phase 11") else toggleFavorite(game)
+                if (detailFocus == 0) showToast(UiText.res(R.string.toast_launcher_soon)) else toggleFavorite(game)
             GamepadAction.Favorite -> toggleFavorite(game)
             GamepadAction.Back -> detail = null
             GamepadAction.Menu -> openMenu()
@@ -341,11 +390,12 @@ class AppViewModel : ViewModel() {
     private fun handleMenu(action: GamepadAction) {
         when (action) {
             GamepadAction.Up -> menuIndex = (menuIndex - 1).coerceAtLeast(0)
-            GamepadAction.Down -> menuIndex = (menuIndex + 1).coerceAtMost(MENU_ITEMS.size - 1)
+            GamepadAction.Down -> menuIndex = (menuIndex + 1).coerceAtMost(MenuItem.entries.size - 1)
             GamepadAction.Select -> {
-                when (MENU_ITEMS[menuIndex]) {
-                    "Rescan library" -> refreshLibrary(force = true)
-                    "Settings" -> {
+                when (MenuItem.entries[menuIndex]) {
+                    MenuItem.Resume -> Unit
+                    MenuItem.Rescan -> refreshLibrary(force = true)
+                    MenuItem.Settings -> {
                         settings.reset()
                         tab = Tab.Settings
                     }
@@ -391,10 +441,10 @@ class AppViewModel : ViewModel() {
     private fun toggleFavorite(game: Game) {
         val makeFavorite = game.id !in favorites
         viewModelScope.launch { data?.library?.setFavorite(game.id, makeFavorite) }
-        showToast(if (makeFavorite) "Added to Favorites" else "Removed from Favorites")
+        showToast(UiText.res(if (makeFavorite) R.string.toast_added_favorite else R.string.toast_removed_favorite))
     }
 
-    private fun showToast(message: String) {
+    private fun showToast(message: UiText) {
         toast = message
         toastJob?.cancel()
         toastJob = viewModelScope.launch {

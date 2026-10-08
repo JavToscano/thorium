@@ -28,13 +28,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.thorium.app.R
 import com.thorium.core.ui.components.Cover
 import com.thorium.core.ui.components.focusBorder
 import com.thorium.core.ui.components.focusScale
 import com.thorium.core.ui.components.systemColors
+import com.thorium.core.ui.text.resolve
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
 
@@ -43,9 +47,9 @@ fun CardRow(row: RowModel, rowFocused: Boolean, itemIndex: Int, vm: AppViewModel
     val state = rememberLazyListState()
     LaunchedEffect(itemIndex) { state.animateScrollToItem((itemIndex - 1).coerceAtLeast(0)) }
     Column(Modifier.fillMaxWidth()) {
-        if (row.title.isNotEmpty()) {
+        row.title?.let { title ->
             Text(
-                row.title,
+                title.resolve(),
                 modifier = Modifier.padding(start = Dimens.ScreenPadding, top = 6.dp, bottom = 2.dp),
                 color = if (rowFocused) Palette.TextPrimary else Palette.TextSecondary,
                 fontSize = 15.sp,
@@ -93,7 +97,7 @@ private fun SystemTile(card: CardModel.SystemCard, focused: Boolean) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(card.system.shortName, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text(gameCountLabel(card.gameCount), color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+            Text(pluralStringResource(R.plurals.games_count, card.gameCount, card.gameCount), color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
         }
     }
 }
@@ -110,7 +114,7 @@ fun TabBar(selected: Tab) {
             val isSelected = tab == selected
             val color by animateColorAsState(if (isSelected) Palette.Accent else Palette.TextSecondary, label = "tab")
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(tab.title, color = color, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(tab.title), color = color, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 Box(Modifier.padding(top = 3.dp).width(if (isSelected) 28.dp else 0.dp).height(3.dp).background(color))
             }
         }
@@ -119,5 +123,3 @@ fun TabBar(selected: Tab) {
 }
 
 
-/** "1 game" / "N games". */
-fun gameCountLabel(count: Int): String = if (count == 1) "1 game" else "$count games"

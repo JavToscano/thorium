@@ -7,6 +7,7 @@
     <application
         android:name=".ThoriumApplication"
         android:label="Thorium"
+        android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.Thorium">
 
         <!--

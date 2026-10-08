@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pestañas -->
+    <string name="tab_home">Inicio</string>
+    <string name="tab_systems">Consolas</string>
+    <string name="tab_favorites">Favoritos</string>
+    <string name="tab_settings">Ajustes</string>
+
+    <!-- Filas del inicio -->
+    <string name="row_continue">Continuar jugando</string>
+    <string name="row_systems">Consolas</string>
+    <string name="row_recent">Añadidos recientemente</string>
+    <string name="row_favorites">Favoritos</string>
+
+    <!-- Leyenda de botones (los nombres de los botones, como A o START, no se traducen) -->
+    <string name="hint_select">Seleccionar</string>
+    <string name="hint_back">Atrás</string>
+    <string name="hint_favorite">Favorito</string>
+    <string name="hint_menu">Menú</string>
+    <string name="hint_options">Opciones</string>
+    <string name="hint_close">Cerrar</string>
+    <string name="hint_open_settings">Abrir ajustes</string>
+    <string name="hint_home">Inicio</string>
+    <string name="hint_tabs">Pestañas</string>
+    <string name="hint_move">Mover</string>
+    <string name="hint_remove_folder">Quitar carpeta</string>
+    <string name="hint_open">Abrir</string>
+    <string name="hint_use_folder">Usar esta carpeta</string>
+    <string name="hint_up">Subir</string>
+    <string name="hint_toggle_create">Marcar / Crear</string>
+    <string name="hint_all_none">Todo / Nada</string>
+
+    <!-- Menú START -->
+    <string name="menu_title">Menú</string>
+    <string name="menu_resume">Continuar</string>
+    <string name="menu_rescan">Volver a escanear</string>
+    <string name="menu_settings">Ajustes</string>
+
+    <!-- Detalle del juego -->
+    <string name="detail_play">Jugar</string>
+    <string name="detail_favorite">Favorito</string>
+    <string name="detail_unfavorite">Quitar favorito</string>
+    <string name="detail_progress">Progreso %1$d%%</string>
+    <string name="detail_not_played">Aún no jugado</string>
+
+    <!-- Avisos -->
+    <string name="toast_secondary_soon">Las acciones secundarias llegarán después</string>
+    <string name="toast_launcher_soon">El lanzador llega en la Fase 11</string>
+    <string name="toast_added_favorite">Añadido a Favoritos</string>
+    <string name="toast_removed_favorite">Quitado de Favoritos</string>
+    <plurals name="toast_games_found">
+        <item quantity="one">%1$d juego encontrado (%2$d ms)</item>
+        <item quantity="many">%1$d juegos encontrados (%2$d ms)</item>
+        <item quantity="other">%1$d juegos encontrados (%2$d ms)</item>
+    </plurals>
+    <plurals name="toast_games_found_new">
+        <item quantity="one">%1$d juego encontrado, %2$d nuevos (%3$d ms)</item>
+        <item quantity="many">%1$d juegos encontrados, %2$d nuevos (%3$d ms)</item>
+        <item quantity="other">%1$d juegos encontrados, %2$d nuevos (%3$d ms)</item>
+    </plurals>
+    <string name="toast_root_added">Añadida %1$s</string>
+    <string name="toast_root_removed">Quitada %1$s</string>
+    <string name="toast_dual_on">Doble pantalla activada</string>
+    <string name="toast_dual_off">Doble pantalla desactivada</string>
+    <string name="toast_already_listed">Ya está en la lista</string>
+    <string name="toast_nothing_to_create">No hay nada que crear</string>
+    <plurals name="toast_created_folders">
+        <item quantity="one">%1$d carpeta creada</item>
+        <item quantity="many">%1$d carpetas creadas</item>
+        <item quantity="other">%1$d carpetas creadas</item>
+    </plurals>
+    <string name="toast_created_partial">Creadas %1$d, no se pudo crear: %2$s</string>
+    <string name="toast_about">Thorium %1$s</string>
+
+    <!-- Estados vacíos -->
+    <string name="empty_scanning">Escaneando tu biblioteca…</string>
+    <string name="empty_favorites">Aún no hay nada aquí. Pulsa Y sobre un juego para añadirlo a Favoritos.</string>
+    <string name="empty_no_games">No se encontraron juegos. Pon tus juegos en carpetas como 3ds, gba o switch en la tarjeta SD o en el almacenamiento interno y elige «Volver a escanear» en el menú.</string>
+
+    <!-- Permiso de almacenamiento -->
+    <string name="perm_title">Se necesita acceso al almacenamiento</string>
+    <string name="perm_body">Thorium lee tus carpetas de juegos (almacenamiento interno y tarjeta SD) para crear tu biblioteca. Android lo llama «Acceso a todos los archivos». Thorium solo escanea carpetas con nombre de consola, como 3ds, gba o switch, y nunca sube nada.</string>
+    <string name="perm_steps">Pulsa A, activa el interruptor de Thorium y vuelve con B.</string>
+    <string name="perm_button">Abrir ajustes</string>
+
+    <!-- Cantidades -->
+    <plurals name="games_count">
+        <item quantity="one">%1$d juego</item>
+        <item quantity="many">%1$d juegos</item>
+        <item quantity="other">%1$d juegos</item>
+    </plurals>
+    <plurals name="folders_count">
+        <item quantity="one">%1$d carpeta</item>
+        <item quantity="many">%1$d carpetas</item>
+        <item quantity="other">%1$d carpetas</item>
+    </plurals>
+
+    <!-- Ajustes -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_folders_title">Carpetas de juegos</string>
+    <string name="settings_folders_desc">Elige dónde busca juegos Thorium</string>
+    <string name="settings_dual_title">Doble pantalla</string>
+    <string name="settings_dual_desc">Muestra los detalles del juego en la segunda pantalla</string>
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_language_desc">Se aplica a toda la aplicación</string>
+    <string name="settings_rescan_title">Volver a escanear la biblioteca</string>
+    <string name="settings_diag_title">Diagnóstico</string>
+    <string name="settings_diag_desc">Probador de pantallas y mando (solo en inglés)</string>
+    <string name="settings_about_title">Acerca de</string>
+    <string name="settings_about_desc">Thorium %1$s</string>
+    <string name="value_on">Sí</string>
+    <string name="value_off">No</string>
+    <string name="language_system">Predeterminado del sistema</string>
+
+    <!-- Carpetas de juegos -->
+    <string name="folders_title">Carpetas de juegos</string>
+    <string name="folders_subtitle">Thorium busca carpetas con nombre de consola (gba, 3ds, switch…) dentro de estas ubicaciones.</string>
+    <string name="folders_auto_title">Escanear todo el almacenamiento automáticamente</string>
+    <string name="folders_no_storage">No se encontró almacenamiento</string>
+    <string name="folders_custom_detail">%1$s · pulsa A para crear aquí las carpetas de consolas</string>
+    <string name="folders_add_title">Añadir carpeta…</string>
+    <string name="folders_add_desc">Explora el almacenamiento y elige una carpeta</string>
+    <string name="sd_card_label">Tarjeta SD (%1$s)</string>
+
+    <!-- Explorador de carpetas -->
+    <string name="browser_title">Elige una carpeta</string>
+    <string name="browser_storage">Almacenamiento</string>
+    <string name="browser_empty">No hay subcarpetas aquí. Pulsa Y para usar esta carpeta o B para subir.</string>
+
+    <!-- Preparar carpeta -->
+    <string name="setup_title">Preparar carpeta</string>
+    <string name="setup_subtitle">%1$s · marca las consolas que quieras y Thorium crea sus carpetas.</string>
+    <plurals name="setup_create">
+        <item quantity="one">Crear %1$d carpeta</item>
+        <item quantity="many">Crear %1$d carpetas</item>
+        <item quantity="other">Crear %1$d carpetas</item>
+    </plurals>
+    <string name="setup_all_exist">Todas las consolas ya tienen carpeta</string>
+    <string name="setup_names_hint">Las carpetas se llaman gba, 3ds, switch…</string>
+    <string name="setup_exists_detail">Ya existe: %1$s</string>
+    <string name="setup_folder_detail">Carpeta: %1$s</string>
+    <string name="setup_exists_badge">Existe</string>
+
+    <!-- Acompañante (pantalla inferior) -->
+    <string name="companion_screenshots">Capturas</string>
+    <string name="companion_soon">próximamente</string>
+    <string name="companion_controls">Controles</string>
+    <string name="companion_browse_system">Pulsa A para explorar esta consola</string>
+    <string name="companion_select_game">Elige un juego en la pantalla superior</string>
+    <string name="companion_settings_top">Los ajustes están en la pantalla superior</string>
+</resources>

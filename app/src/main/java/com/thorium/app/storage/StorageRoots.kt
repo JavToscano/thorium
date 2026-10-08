@@ -1,6 +1,7 @@
 package com.thorium.app.storage
 
 import android.content.Context
+import com.thorium.app.R
 import android.os.Build
 import android.os.Environment
 import android.os.storage.StorageManager
@@ -27,7 +28,7 @@ object StorageRoots {
                 dir?.let {
                     val name = volume.getDescription(context) ?: it.name
                     // A card is often labelled with whatever its owner formatted it as ("3DS").
-                    StorageVolumeInfo(it, if (volume.isPrimary) name else "SD card ($name)")
+                    StorageVolumeInfo(it, if (volume.isPrimary) name else context.getString(R.string.sd_card_label, name))
                 }
             }
             .distinctBy { it.dir }
