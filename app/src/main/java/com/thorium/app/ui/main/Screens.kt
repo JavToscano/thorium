@@ -56,7 +56,7 @@ fun ThoriumApp(vm: AppViewModel) {
                 } else if (vm.tab == Tab.Settings) {
                     SettingsScreen(vm.settings)
                 } else if (vm.tab == Tab.Downloads) {
-                    DownloadsScreen(vm)
+                    DownloadsScreen(vm.downloadsUi)
                 } else {
                     key(vm.tab) { RowsScreen(vm) }
                 }

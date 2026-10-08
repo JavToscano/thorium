@@ -16,8 +16,9 @@ import com.thorium.core.model.SourceConfig
 import com.thorium.core.model.SourceException
 import com.thorium.app.R
 import com.thorium.app.storage.StorageVolumeInfo
-import com.thorium.app.ui.settings.BrowseHost
-import com.thorium.app.ui.settings.DownloadStart
+import com.thorium.app.ui.downloads.DownloadStart
+import com.thorium.app.ui.downloads.DownloadsController
+import com.thorium.app.ui.downloads.DownloadsHost
 import com.thorium.app.ui.settings.SettingsController
 import com.thorium.app.ui.settings.SourceErrors
 import com.thorium.app.ui.settings.SourceDraft
@@ -114,7 +115,6 @@ class AppViewModel : ViewModel() {
 
     /** The download queue as shown in the Downloads tab (finished items last). */
     var downloadItems by mutableStateOf<List<com.thorium.core.model.DownloadItem>>(emptyList()); private set
-    var downloadIndex by mutableIntStateOf(0); private set
 
     /** Set by the application once the download queue exists; starts mirroring its items. */
     var downloads: com.thorium.app.downloads.DownloadManager? = null
@@ -241,32 +241,6 @@ class AppViewModel : ViewModel() {
 
         override val platforms: List<GameSystem> get() = PlatformCatalog.Default.platforms.map { it.system }
 
-        override fun list(source: SourceConfig, ref: String?, onResult: (Result<List<RemoteEntry>>) -> Unit) {
-            viewModelScope.launch {
-                val result = withContext(Dispatchers.IO) {
-                    runCatching {
-                        val password = data?.sources?.password(source.id).orEmpty()
-                        SourceFactory.create(source, password).list(ref)
-                    }
-                }
-                onResult(result)
-            }
-        }
-
-        override fun download(source: SourceConfig, entry: RemoteEntry, platformId: String?, onResult: (DownloadStart) -> Unit) {
-            val manager = downloads ?: return
-            viewModelScope.launch {
-                val platform = platformId?.let { id -> PlatformCatalog.Default.platforms.firstOrNull { it.id == id } }
-                val start = when (manager.request(source, entry, platform)) {
-                    is com.thorium.app.downloads.DownloadRequest.Queued -> DownloadStart.Queued
-                    com.thorium.app.downloads.DownloadRequest.NeedsPlatform -> DownloadStart.NeedsPlatform
-                    com.thorium.app.downloads.DownloadRequest.NoFolder -> DownloadStart.NoFolder
-                }
-                if (start == DownloadStart.Queued) onDownloadQueued?.invoke()
-                onResult(start)
-            }
-        }
-
         override fun saveSource(draft: SourceDraft, verified: Boolean) {
             viewModelScope.launch {
                 val id = data?.sources?.save(draft.toConfig(), draft.password)
@@ -302,22 +276,50 @@ class AppViewModel : ViewModel() {
         override fun cycleLanguage() { languageController?.cycle() }
     })
 
-    private fun downloadHints(): List<Hint> {
-        val item = downloadItems.getOrNull(downloadIndex)
-        val main = when (item?.state) {
-            com.thorium.core.model.DownloadState.Paused -> Hint("A", R.string.hint_resume)
-            com.thorium.core.model.DownloadState.Failed -> Hint("A", R.string.hint_retry)
-            null, com.thorium.core.model.DownloadState.Completed, com.thorium.core.model.DownloadState.Cancelled -> Hint("A", R.string.hint_select)
-            else -> Hint("A", R.string.hint_pause)
+    /** The Downloads tab: sources to browse on top, the download queue below. */
+    val downloadsUi = DownloadsController(object : DownloadsHost {
+        override val sources get() = sourceList
+        override val items get() = downloadItems
+        override val platforms: List<GameSystem> get() = PlatformCatalog.Default.platforms.map { it.system }
+        override fun toast(message: UiText) = showToast(message)
+
+        override fun pause(id: Long) { downloads?.pause(id) }
+        override fun resume(id: Long) { downloads?.resume(id) }
+        override fun cancel(id: Long) { downloads?.cancel(id) }
+        override fun remove(id: Long) { downloads?.remove(id) }
+        override fun clearFinished() { downloads?.clearFinished() }
+
+        override fun openSourceSettings() {
+            settings.openSources()
+            tab = Tab.Settings
         }
-        return listOf(
-            main,
-            Hint("Y", if (item?.state?.isFinished == true) R.string.hint_remove else R.string.hint_cancel),
-            Hint("SELECT", R.string.hint_clear),
-            Hint("L1/R1", R.string.hint_tabs),
-            Hint("START", R.string.hint_menu),
-        )
+
+    override fun list(source: SourceConfig, ref: String?, onResult: (Result<List<RemoteEntry>>) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val password = data?.sources?.password(source.id).orEmpty()
+                    SourceFactory.create(source, password).list(ref)
+                }
+            }
+            onResult(result)
+        }
     }
+
+    override fun download(source: SourceConfig, entry: RemoteEntry, platformId: String?, onResult: (DownloadStart) -> Unit) {
+        val manager = downloads ?: return
+        viewModelScope.launch {
+            val platform = platformId?.let { id -> PlatformCatalog.Default.platforms.firstOrNull { it.id == id } }
+            val start = when (manager.request(source, entry, platform)) {
+                is com.thorium.app.downloads.DownloadRequest.Queued -> DownloadStart.Queued
+                com.thorium.app.downloads.DownloadRequest.NeedsPlatform -> DownloadStart.NeedsPlatform
+                com.thorium.app.downloads.DownloadRequest.NoFolder -> DownloadStart.NoFolder
+            }
+            if (start == DownloadStart.Queued) onDownloadQueued?.invoke()
+            onResult(start)
+        }
+    }
+    }, settings.keyboard)
 
     /** Button legend for whatever is on screen. */
     val hints: List<Hint> get() = when {
@@ -329,7 +331,7 @@ class AppViewModel : ViewModel() {
             Hint("Y", R.string.hint_favorite), Hint("START", R.string.hint_menu),
         )
         tab == Tab.Settings -> settings.hints
-        tab == Tab.Downloads -> downloadHints()
+        tab == Tab.Downloads -> downloadsUi.hints
         else -> listOf(
             Hint("A", R.string.hint_select), Hint("B", R.string.hint_back), Hint("Y", R.string.hint_favorite),
             Hint("START", R.string.hint_menu), Hint("SELECT", R.string.hint_options),
@@ -480,27 +482,15 @@ class AppViewModel : ViewModel() {
     }
 
     private fun handleDownloads(action: GamepadAction) {
-        val items = downloadItems
-        downloadIndex = downloadIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
-        val item = items.getOrNull(downloadIndex)
-        val manager = downloads
+        if (downloadsUi.handle(action)) return
+        // Only the first page of the tab switches tabs; deeper pages use B to step back first.
+        val onMainPage = downloadsUi.page == com.thorium.app.ui.downloads.DownloadsPage.Main
         when (action) {
-            GamepadAction.Up -> downloadIndex = (downloadIndex - 1).coerceAtLeast(0)
-            GamepadAction.Down -> downloadIndex = (downloadIndex + 1).coerceAtMost((items.size - 1).coerceAtLeast(0))
-            GamepadAction.Select -> if (item != null && manager != null) when (item.state) {
-                com.thorium.core.model.DownloadState.Paused, com.thorium.core.model.DownloadState.Failed -> manager.resume(item.id)
-                com.thorium.core.model.DownloadState.Completed, com.thorium.core.model.DownloadState.Cancelled -> Unit
-                else -> manager.pause(item.id)
-            }
-            GamepadAction.Favorite -> if (item != null && manager != null) {
-                if (item.state.isFinished) manager.remove(item.id) else manager.cancel(item.id)
-            }
-            GamepadAction.Secondary -> manager?.clearFinished()
-            GamepadAction.TabLeft -> switchTab(-1)
-            GamepadAction.TabRight -> switchTab(+1)
-            GamepadAction.Back -> tab = Tab.Home
+            GamepadAction.TabLeft -> if (onMainPage) switchTab(-1)
+            GamepadAction.TabRight -> if (onMainPage) switchTab(+1)
+            GamepadAction.Back -> if (onMainPage) tab = Tab.Home
             GamepadAction.Menu -> openMenu()
-            GamepadAction.Left, GamepadAction.Right -> Unit
+            else -> Unit
         }
     }
 

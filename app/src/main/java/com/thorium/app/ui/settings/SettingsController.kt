@@ -17,7 +17,7 @@ import com.thorium.data.library.FolderInitializer
 import com.thorium.data.library.SetupEntry
 import java.io.File
 
-enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, Browse, PlatformPick, SourceConsole }
+enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, SourceConsole }
 
 /** One selectable row of the "Game folders" page. */
 sealed interface FolderRow {
@@ -40,7 +40,7 @@ enum class SettingsItem(@StringRes val title: Int, @StringRes val description: I
 data class BrowserEntry(val label: String, val dir: File)
 
 /** What the settings screens need from the rest of the app. */
-interface SettingsHost : SourcesHost, BrowseHost {
+interface SettingsHost : SourcesHost {
     val autoDetectStorage: Boolean
     val customRoots: List<String>
     val companionEnabled: Boolean
@@ -71,8 +71,7 @@ class SettingsController(internal val host: SettingsHost) {
     val keyboard = KeyboardController()
 
     /** Sources list and add/edit form. */
-    internal val browseUi = BrowseController(host, keyboard) { page = it }
-    internal val sourcesUi = SourcesController(host, keyboard, { page = it }, { browseUi.open(it) }, { host.platforms })
+    internal val sourcesUi = SourcesController(host, keyboard) { page = it }
 
     var page by mutableStateOf(SettingsPage.Main); private set
     var mainIndex by mutableIntStateOf(0); private set
@@ -127,15 +126,18 @@ class SettingsController(internal val host: SettingsHost) {
             )
             SettingsPage.Sources -> sourcesUi.listHints
             SettingsPage.SourceForm -> sourcesUi.formHints
-            SettingsPage.Browse -> browseUi.hints
-            SettingsPage.PlatformPick -> browseUi.platformHints
-            SettingsPage.SourceConsole -> browseUi.platformHints
+            SettingsPage.SourceConsole -> sourcesUi.consoleHints
         }
 
     private val keyboardHints = listOf(
         Hint("A", R.string.hint_type), Hint("Y", R.string.hint_delete), Hint("SELECT", R.string.hint_shift),
         Hint("START", R.string.hint_done), Hint("B", R.string.hint_cancel),
     )
+
+    /** Jumps straight to the sources list (used by the Downloads tab). */
+    fun openSources() {
+        page = SettingsPage.Sources
+    }
 
     /** Leaves any sub-page; called when the tab is entered again from elsewhere. */
     fun reset() {
@@ -150,8 +152,6 @@ class SettingsController(internal val host: SettingsHost) {
         SettingsPage.Setup -> handleSetup(action)
         SettingsPage.Sources -> sourcesUi.handleList(action)
         SettingsPage.SourceForm -> sourcesUi.handleForm(action)
-        SettingsPage.Browse -> browseUi.handle(action)
-        SettingsPage.PlatformPick -> browseUi.handlePlatform(action)
         SettingsPage.SourceConsole -> sourcesUi.handleConsole(action)
     }
 

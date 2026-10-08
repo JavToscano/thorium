@@ -52,6 +52,7 @@ enum class FormRow { Name, Type, Location, Username, Password, Insecure, Console
 interface SourcesHost {
     val sources: List<SourceConfig>
     /** [verified] is true when the last test of this very draft succeeded. */
+    val platforms: List<com.thorium.core.model.GameSystem>
     fun saveSource(draft: SourceDraft, verified: Boolean)
     fun removeSource(id: Long)
     fun testSource(draft: SourceDraft, onResult: (TestResult) -> Unit)
@@ -63,9 +64,7 @@ class SourcesController(
     private val host: SourcesHost,
     private val keyboard: KeyboardController,
     private val goTo: (SettingsPage) -> Unit,
-    private val onBrowse: (SourceConfig) -> Unit,
     /** Console ids offered by the "default console" picker, in display order. */
-    private val platforms: () -> List<com.thorium.core.model.GameSystem>,
 ) {
     var listIndex by mutableIntStateOf(0); private set
     var formIndex by mutableIntStateOf(0); private set
@@ -74,7 +73,7 @@ class SourcesController(
     var consoleIndex by mutableIntStateOf(0); private set
 
     /** Rows of the default-console picker: "ask each time" first, then every console. */
-    val consoleChoices: List<com.thorium.core.model.GameSystem?> get() = listOf<com.thorium.core.model.GameSystem?>(null) + platforms()
+    val consoleChoices: List<com.thorium.core.model.GameSystem?> get() = listOf<com.thorium.core.model.GameSystem?>(null) + host.platforms
 
     val editing: Boolean get() = draft.id != 0L
 
@@ -96,9 +95,11 @@ class SourcesController(
 
     val listHints: List<Hint>
         get() = listOf(
-            Hint("A", R.string.hint_open), Hint("SELECT", R.string.hint_edit),
-            Hint("Y", R.string.hint_remove), Hint("B", R.string.hint_back),
+            Hint("A", R.string.hint_edit), Hint("Y", R.string.hint_remove), Hint("B", R.string.hint_back),
         )
+
+    val consoleHints: List<Hint>
+        get() = listOf(Hint("A", R.string.hint_select), Hint("B", R.string.hint_back))
 
     val formHints: List<Hint>
         get() = listOf(Hint("A", R.string.hint_select), Hint("B", R.string.hint_back))
@@ -111,12 +112,11 @@ class SourcesController(
         when (action) {
             GamepadAction.Up -> listIndex = (listIndex - 1).coerceAtLeast(0)
             GamepadAction.Down -> listIndex = (listIndex + 1).coerceAtMost(listSize - 1)
-            // A browses a source; the "Add source" row opens an empty form; SELECT edits.
+            // A edits a source; the "Add source" row opens an empty form. Browsing lives in the Downloads tab.
             GamepadAction.Select -> {
                 val source = host.sources.getOrNull(listIndex)
-                if (source != null) onBrowse(source) else openForm(SourceDraft())
+                openForm(if (source != null) SourceDraft.from(source) else SourceDraft())
             }
-            GamepadAction.Secondary -> host.sources.getOrNull(listIndex)?.let { openForm(SourceDraft.from(it)) }
             GamepadAction.Favorite -> host.sources.getOrNull(listIndex)?.let {
                 host.removeSource(it.id)
                 listIndex = (listIndex - 1).coerceAtLeast(0)

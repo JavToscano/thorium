@@ -224,7 +224,6 @@
     <string name="dl_err_extraction">Could not extract the archive</string>
     <string name="dl_err_storage">Could not write the game to storage</string>
     <string name="dl_err_unknown">Unexpected error</string>
-    <string name="dl_empty">No downloads yet. Open a source in Settings → Sources to browse it.</string>
     <string name="dl_progress">%1$s · %2$s of %3$s</string>
     <string name="dl_progress_unknown">%1$s · %2$s</string>
     <string name="dl_installed_in">Installed in %1$s</string>
@@ -252,4 +251,12 @@
     <string name="default_console_ask">Ask each time</string>
     <string name="default_console_ask_desc">Thorium works out the console from the file, or asks</string>
     <string name="default_console_subtitle">For a source that only has games of one console. Its downloads go to that console\'s folder unless the source states another one.</string>
+
+    <!-- Downloads tab layout -->
+    <string name="dl_header_sources">Get games from</string>
+    <string name="dl_header_queue">Queue</string>
+    <string name="dl_no_sources">You have no sources yet. Add one under Manage sources to browse and download games.</string>
+    <string name="dl_manage_sources">Manage sources…</string>
+    <string name="dl_manage_desc">Add, edit or remove sources in Settings</string>
+    <string name="hint_browse">Browse</string>
 </resources>

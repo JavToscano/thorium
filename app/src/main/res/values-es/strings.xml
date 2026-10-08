@@ -229,7 +229,6 @@
     <string name="dl_err_extraction">No se pudo extraer el archivo comprimido</string>
     <string name="dl_err_storage">No se pudo guardar el juego en el almacenamiento</string>
     <string name="dl_err_unknown">Error inesperado</string>
-    <string name="dl_empty">Aún no hay descargas. Abre una fuente en Ajustes → Fuentes para explorarla.</string>
     <string name="dl_progress">%1$s · %2$s de %3$s</string>
     <string name="dl_progress_unknown">%1$s · %2$s</string>
     <string name="dl_installed_in">Instalado en %1$s</string>
@@ -257,4 +256,12 @@
     <string name="default_console_ask">Preguntar cada vez</string>
     <string name="default_console_ask_desc">Thorium deduce la consola del archivo, o pregunta</string>
     <string name="default_console_subtitle">Para una fuente que solo tiene juegos de una consola. Sus descargas van a la carpeta de esa consola salvo que la fuente indique otra.</string>
+
+    <!-- Disposición de la pestaña Descargas -->
+    <string name="dl_header_sources">Obtener juegos de</string>
+    <string name="dl_header_queue">Cola</string>
+    <string name="dl_no_sources">Aún no tienes fuentes. Añade una en Gestionar fuentes para explorar y descargar juegos.</string>
+    <string name="dl_manage_sources">Gestionar fuentes…</string>
+    <string name="dl_manage_desc">Añade, edita o quita fuentes en Ajustes</string>
+    <string name="hint_browse">Explorar</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.thorium.app.ui.settings
+package com.thorium.app.ui.downloads
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.thorium.app.R
 import com.thorium.app.ui.main.Hint
+import com.thorium.app.ui.settings.SourceErrors
 import com.thorium.core.model.GameSystem
 import com.thorium.core.model.RemoteEntry
 import com.thorium.core.model.SourceConfig
@@ -38,7 +39,7 @@ interface BrowseHost {
 class BrowseController(
     private val host: BrowseHost,
     private val keyboard: KeyboardController,
-    private val goTo: (SettingsPage) -> Unit,
+    private val goTo: (DownloadsPage) -> Unit,
 ) {
     var source by mutableStateOf<SourceConfig?>(null); private set
     var state by mutableStateOf<BrowseState>(BrowseState.Loading); private set
@@ -68,7 +69,7 @@ class BrowseController(
         source = config
         trail.clear()
         load(null, push = true)
-        goTo(SettingsPage.Browse)
+        goTo(DownloadsPage.Browse)
     }
 
     fun handle(action: GamepadAction): Boolean {
@@ -98,9 +99,9 @@ class BrowseController(
                 if (entry != null && config != null) {
                     host.download(config, entry, list[platformIndex.coerceIn(0, list.size - 1)].id) { report(it, entry) }
                 }
-                goTo(SettingsPage.Browse)
+                goTo(DownloadsPage.Browse)
             }
-            GamepadAction.Back -> goTo(SettingsPage.Browse)
+            GamepadAction.Back -> goTo(DownloadsPage.Browse)
             else -> return false
         }
         return true
@@ -115,7 +116,7 @@ class BrowseController(
                 if (result == DownloadStart.NeedsPlatform) {
                     pending = entry
                     platformIndex = 0
-                    goTo(SettingsPage.PlatformPick)
+                    goTo(DownloadsPage.PlatformPick)
                 } else {
                     report(result, entry)
                 }
@@ -136,7 +137,7 @@ class BrowseController(
             trail.removeLast()
             load(trail.last(), push = false)
         } else {
-            goTo(SettingsPage.Sources)
+            goTo(DownloadsPage.Main)
         }
     }
 

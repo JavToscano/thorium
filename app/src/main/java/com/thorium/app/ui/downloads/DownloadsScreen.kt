@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,7 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thorium.app.R
-import com.thorium.app.ui.main.AppViewModel
+import com.thorium.app.ui.settings.ListRow
+import com.thorium.app.ui.settings.SourcesController
 import com.thorium.app.ui.main.formatBytes
 import com.thorium.app.ui.settings.FocusList
 import com.thorium.app.ui.settings.PageFrame
@@ -35,20 +35,37 @@ import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
 
 @Composable
-fun DownloadsScreen(vm: AppViewModel) {
-    val items = vm.downloadItems
-    if (items.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                stringResource(R.string.dl_empty),
-                modifier = Modifier.padding(horizontal = 80.dp),
-                color = Palette.TextSecondary, fontSize = 15.sp,
-            )
-        }
-        return
+fun DownloadsScreen(c: DownloadsController) {
+    when (c.page) {
+        DownloadsPage.Main -> MainPage(c)
+        DownloadsPage.Browse -> BrowsePage(c)
+        DownloadsPage.PlatformPick -> PlatformPickPage(c)
     }
+}
+
+@Composable
+private fun MainPage(c: DownloadsController) {
     PageFrame(stringResource(R.string.tab_downloads), null) {
-        FocusList(items, vm.downloadIndex) { _, item, focused -> DownloadRow(item, focused) }
+        FocusList(c.rows, c.index) { _, row, focused ->
+            when (row) {
+                is DownloadsRow.Header -> Text(
+                    stringResource(row.title).uppercase(),
+                    modifier = Modifier.padding(top = 6.dp),
+                    color = Palette.TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                )
+                is DownloadsRow.Note -> Text(stringResource(row.text), color = Palette.TextSecondary, fontSize = 13.sp)
+                is DownloadsRow.Source -> ListRow(
+                    title = row.config.name,
+                    detail = stringResource(SourcesController.typeLabel(row.config.type)) + " · " + row.config.location,
+                    focused = focused,
+                    trailing = "›",
+                )
+                DownloadsRow.Manage -> ListRow(
+                    stringResource(R.string.dl_manage_sources), stringResource(R.string.dl_manage_desc), focused,
+                )
+                is DownloadsRow.Item -> DownloadRow(row.item, focused)
+            }
+        }
     }
 }
 
