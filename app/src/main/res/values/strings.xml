@@ -67,7 +67,6 @@
         <item quantity="other">Created %1$d folders</item>
     </plurals>
     <string name="toast_created_partial">Created %1$d, could not create: %2$s</string>
-    <string name="toast_about">Thorium %1$s</string>
 
     <!-- Empty states -->
     <string name="empty_scanning">Scanning your library…</string>
@@ -270,4 +269,13 @@
     <string name="companion_dl_pick">Pick a source on the top screen to browse it, or watch your downloads below.</string>
     <string name="companion_dl_browse">Press A on the top screen to browse it.</string>
     <string name="companion_dl_none">No downloads yet.</string>
+    <string name="about_title">About</string>
+    <string name="about_app_title">Thorium</string>
+    <string name="about_app_text">Version %1$s. Free software under the MIT License. Copyright © 2026 Javier Toscano.</string>
+    <string name="about_catalog_title">Game catalog</string>
+    <string name="about_catalog_text">Game names, regions and checksums come from the No-Intro DAT files, distributed by the libretro-database project under the Creative Commons Attribution-ShareAlike 4.0 license (creativecommons.org/licenses/by-sa/4.0). Thorium converted them into a compact database, and that converted data keeps the same license. No game files or download links are included.</string>
+    <string name="about_covers_title">Cover art</string>
+    <string name="about_covers_text">Cover images come from ScreenScraper (screenscraper.fr) through your own account. Thorium is not affiliated with ScreenScraper.</string>
+    <string name="about_libs_title">Open-source components</string>
+    <string name="about_libs_text">Jetpack Compose, Room, Kotlin and kotlinx, OkHttp and Apache Commons Compress (Apache License 2.0); XZ for Java (0BSD).</string>
 </resources>

@@ -70,7 +70,6 @@
         <item quantity="other">%1$d carpetas creadas</item>
     </plurals>
     <string name="toast_created_partial">Creadas %1$d, no se pudo crear: %2$s</string>
-    <string name="toast_about">Thorium %1$s</string>
 
     <!-- Estados vacíos -->
     <string name="empty_scanning">Escaneando tu biblioteca…</string>
@@ -275,4 +274,13 @@
     <string name="companion_dl_pick">Elige una fuente en la pantalla superior para explorarla, o mira tus descargas abajo.</string>
     <string name="companion_dl_browse">Pulsa A en la pantalla superior para explorarla.</string>
     <string name="companion_dl_none">Aún no hay descargas.</string>
+    <string name="about_title">Acerca de</string>
+    <string name="about_app_title">Thorium</string>
+    <string name="about_app_text">Versión %1$s. Software libre bajo la licencia MIT. Copyright © 2026 Javier Toscano.</string>
+    <string name="about_catalog_title">Catálogo de juegos</string>
+    <string name="about_catalog_text">Los nombres, regiones y sumas de verificación de los juegos vienen de los archivos DAT de No-Intro, distribuidos por el proyecto libretro-database bajo la licencia Creative Commons Atribución-CompartirIgual 4.0 (creativecommons.org/licenses/by-sa/4.0). Thorium los convirtió en una base de datos compacta, y esos datos convertidos conservan la misma licencia. No se incluyen archivos de juegos ni enlaces de descarga.</string>
+    <string name="about_covers_title">Carátulas</string>
+    <string name="about_covers_text">Las imágenes de carátula vienen de ScreenScraper (screenscraper.fr) a través de tu propia cuenta. Thorium no está afiliado a ScreenScraper.</string>
+    <string name="about_libs_title">Componentes de código abierto</string>
+    <string name="about_libs_text">Jetpack Compose, Room, Kotlin y kotlinx, OkHttp y Apache Commons Compress (licencia Apache 2.0); XZ for Java (0BSD).</string>
 </resources>

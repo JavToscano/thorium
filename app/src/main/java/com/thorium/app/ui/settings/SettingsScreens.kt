@@ -44,6 +44,7 @@ fun SettingsScreen(controller: SettingsController) {
         SettingsPage.Sources -> SourcesPage(controller)
         SettingsPage.SourceForm -> SourceFormPage(controller)
         SettingsPage.SourceConsole -> SourceConsolePage(controller)
+        SettingsPage.About -> AboutPage(controller)
     }
 }
 
@@ -91,6 +92,30 @@ internal fun ListRow(title: String, detail: String?, focused: Boolean, trailing:
         }
         if (trailing != null) {
             Text(trailing, color = Palette.Accent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+/** Credits and licenses; each block is a row so the controller can scroll through them. */
+@Composable
+private fun AboutPage(c: SettingsController) {
+    val blocks = listOf(
+        R.string.about_app_title to stringResource(R.string.about_app_text, SettingsController.VERSION),
+        R.string.about_catalog_title to stringResource(R.string.about_catalog_text),
+        R.string.about_covers_title to stringResource(R.string.about_covers_text),
+        R.string.about_libs_title to stringResource(R.string.about_libs_text),
+    )
+    PageFrame(stringResource(R.string.about_title), null) {
+        FocusList(blocks, c.aboutIndex) { _, block, focused ->
+            val bg by animateColorAsState(if (focused) Color(0xFF26324D) else Palette.Panel, label = "aboutRow")
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(bg)
+                    .border(2.dp, if (focused) Palette.Accent else Color.Transparent, RoundedCornerShape(10.dp))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            ) {
+                Text(stringResource(block.first), color = Palette.TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(block.second, color = Palette.TextSecondary, fontSize = 13.sp)
+            }
         }
     }
 }

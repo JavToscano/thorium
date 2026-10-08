@@ -17,7 +17,7 @@ import com.thorium.data.library.FolderInitializer
 import com.thorium.data.library.SetupEntry
 import java.io.File
 
-enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, SourceConsole }
+enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, SourceConsole, About }
 
 /** One selectable row of the "Game folders" page. */
 sealed interface FolderRow {
@@ -61,8 +61,10 @@ interface SettingsHost : SourcesHost {
  */
 class SettingsController(internal val host: SettingsHost) {
 
-    private companion object {
+    companion object {
         const val VERSION = "0.0.1"
+        /** Number of blocks on the About page (app, catalog, covers, components). */
+        const val ABOUT_BLOCKS = 4
     }
 
     private val initializer = FolderInitializer()
@@ -77,6 +79,7 @@ class SettingsController(internal val host: SettingsHost) {
     var mainIndex by mutableIntStateOf(0); private set
     var foldersIndex by mutableIntStateOf(0); private set
     var browserIndex by mutableIntStateOf(0); private set
+    var aboutIndex by mutableIntStateOf(0); private set
 
     /** Folder being browsed; null means the list of storage volumes. */
     var browserDir by mutableStateOf<File?>(null); private set
@@ -127,6 +130,7 @@ class SettingsController(internal val host: SettingsHost) {
             SettingsPage.Sources -> sourcesUi.listHints
             SettingsPage.SourceForm -> sourcesUi.formHints
             SettingsPage.SourceConsole -> sourcesUi.consoleHints
+            SettingsPage.About -> listOf(Hint("B", R.string.hint_back))
         }
 
     private val keyboardHints = listOf(
@@ -153,6 +157,7 @@ class SettingsController(internal val host: SettingsHost) {
         SettingsPage.Sources -> sourcesUi.handleList(action)
         SettingsPage.SourceForm -> sourcesUi.handleForm(action)
         SettingsPage.SourceConsole -> sourcesUi.handleConsole(action)
+        SettingsPage.About -> handleAbout(action)
     }
 
     private fun handleMain(action: GamepadAction): Boolean {
@@ -166,8 +171,18 @@ class SettingsController(internal val host: SettingsHost) {
                 SettingsItem.DualScreen -> host.setCompanionEnabled(!host.companionEnabled)
                 SettingsItem.Language -> host.cycleLanguage()
                 SettingsItem.Rescan -> host.rescan()
-                SettingsItem.About -> host.toast(UiText.res(R.string.toast_about, VERSION))
+                SettingsItem.About -> { page = SettingsPage.About; aboutIndex = 0 }
             }
+            else -> return false
+        }
+        return true
+    }
+
+    private fun handleAbout(action: GamepadAction): Boolean {
+        when (action) {
+            GamepadAction.Up -> aboutIndex = (aboutIndex - 1).coerceAtLeast(0)
+            GamepadAction.Down -> aboutIndex = (aboutIndex + 1).coerceAtMost(ABOUT_BLOCKS - 1)
+            GamepadAction.Back -> page = SettingsPage.Main
             else -> return false
         }
         return true
