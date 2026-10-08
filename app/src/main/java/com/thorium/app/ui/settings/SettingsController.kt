@@ -12,11 +12,12 @@ import com.thorium.app.ui.main.LanguageChoice
 import com.thorium.app.ui.main.LanguageController
 import com.thorium.core.ui.text.UiText
 import com.thorium.core.ui.input.GamepadAction
+import com.thorium.core.ui.keyboard.KeyboardController
 import com.thorium.data.library.FolderInitializer
 import com.thorium.data.library.SetupEntry
 import java.io.File
 
-enum class SettingsPage { Main, Folders, Browser, Setup }
+enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm }
 
 /** One selectable row of the "Game folders" page. */
 sealed interface FolderRow {
@@ -28,6 +29,7 @@ sealed interface FolderRow {
 /** Rows of the main Settings page. */
 enum class SettingsItem(@StringRes val title: Int, @StringRes val description: Int?) {
     Folders(R.string.settings_folders_title, R.string.settings_folders_desc),
+    Sources(R.string.settings_sources_title, R.string.settings_sources_desc),
     DualScreen(R.string.settings_dual_title, R.string.settings_dual_desc),
     Language(R.string.settings_language_title, R.string.settings_language_desc),
     Rescan(R.string.settings_rescan_title, null),
@@ -38,7 +40,7 @@ enum class SettingsItem(@StringRes val title: Int, @StringRes val description: I
 data class BrowserEntry(val label: String, val dir: File)
 
 /** What the settings screens need from the rest of the app. */
-interface SettingsHost {
+interface SettingsHost : SourcesHost {
     val autoDetectStorage: Boolean
     val customRoots: List<String>
     val companionEnabled: Boolean
@@ -49,7 +51,6 @@ interface SettingsHost {
     fun removeRoot(path: String)
     fun setCompanionEnabled(enabled: Boolean)
     fun rescan()
-    fun toast(message: UiText)
     val language: LanguageController?
     fun cycleLanguage()
 }
@@ -58,13 +59,19 @@ interface SettingsHost {
  * Logical focus and navigation for the Settings tab: main list, game folders and a folder
  * browser. Like the rest of the UI it is driven only by [GamepadAction]s.
  */
-class SettingsController(private val host: SettingsHost) {
+class SettingsController(internal val host: SettingsHost) {
 
     private companion object {
         const val VERSION = "0.0.1"
     }
 
     private val initializer = FolderInitializer()
+
+    /** Controller-driven text entry, shared by every settings page that needs typing. */
+    val keyboard = KeyboardController()
+
+    /** Sources list and add/edit form. */
+    internal val sourcesUi = SourcesController(host, keyboard) { page = it }
 
     var page by mutableStateOf(SettingsPage.Main); private set
     var mainIndex by mutableIntStateOf(0); private set
@@ -88,6 +95,7 @@ class SettingsController(private val host: SettingsHost) {
     val mainItems: List<SettingsItem>
         get() = buildList {
             add(SettingsItem.Folders)
+            add(SettingsItem.Sources)
             add(SettingsItem.DualScreen)
             if (host.language != null) add(SettingsItem.Language)
             add(SettingsItem.Rescan)
@@ -102,7 +110,7 @@ class SettingsController(private val host: SettingsHost) {
         }
 
     val hints: List<Hint>
-        get() = when (page) {
+        get() = if (keyboard.active) keyboardHints else when (page) {
             SettingsPage.Main -> listOf(
                 Hint("A", R.string.hint_select), Hint("B", R.string.hint_home),
                 Hint("L1/R1", R.string.hint_tabs), Hint("START", R.string.hint_menu),
@@ -116,7 +124,14 @@ class SettingsController(private val host: SettingsHost) {
             SettingsPage.Setup -> listOf(
                 Hint("A", R.string.hint_toggle_create), Hint("Y", R.string.hint_all_none), Hint("B", R.string.hint_back),
             )
+            SettingsPage.Sources -> sourcesUi.listHints
+            SettingsPage.SourceForm -> sourcesUi.formHints
         }
+
+    private val keyboardHints = listOf(
+        Hint("A", R.string.hint_type), Hint("Y", R.string.hint_delete), Hint("SELECT", R.string.hint_shift),
+        Hint("START", R.string.hint_done), Hint("B", R.string.hint_cancel),
+    )
 
     /** Leaves any sub-page; called when the tab is entered again from elsewhere. */
     fun reset() {
@@ -124,11 +139,13 @@ class SettingsController(private val host: SettingsHost) {
     }
 
     /** Returns true when the action was handled here (so the caller must not also act on it). */
-    fun handle(action: GamepadAction): Boolean = when (page) {
+    fun handle(action: GamepadAction): Boolean = if (keyboard.handle(action)) true else when (page) {
         SettingsPage.Main -> handleMain(action)
         SettingsPage.Folders -> handleFolders(action)
         SettingsPage.Browser -> handleBrowser(action)
         SettingsPage.Setup -> handleSetup(action)
+        SettingsPage.Sources -> sourcesUi.handleList(action)
+        SettingsPage.SourceForm -> sourcesUi.handleForm(action)
     }
 
     private fun handleMain(action: GamepadAction): Boolean {
@@ -138,6 +155,7 @@ class SettingsController(private val host: SettingsHost) {
             GamepadAction.Down -> mainIndex = (mainIndex + 1).coerceAtMost(count - 1)
             GamepadAction.Select -> when (mainItems[mainIndex]) {
                 SettingsItem.Folders -> { page = SettingsPage.Folders; foldersIndex = 0 }
+                SettingsItem.Sources -> page = SettingsPage.Sources
                 SettingsItem.DualScreen -> host.setCompanionEnabled(!host.companionEnabled)
                 SettingsItem.Language -> host.cycleLanguage()
                 SettingsItem.Rescan -> host.rescan()

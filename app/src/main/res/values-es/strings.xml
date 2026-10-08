@@ -146,4 +146,57 @@
     <string name="companion_browse_system">Pulsa A para explorar esta consola</string>
     <string name="companion_select_game">Elige un juego en la pantalla superior</string>
     <string name="companion_settings_top">Los ajustes están en la pantalla superior</string>
+
+    <!-- Leyenda del teclado -->
+    <string name="hint_type">Escribir</string>
+    <string name="hint_cancel">Cancelar</string>
+    <string name="hint_delete">Borrar</string>
+    <string name="hint_shift">Mayús.</string>
+    <string name="hint_done">Listo</string>
+    <string name="hint_edit">Editar</string>
+    <string name="hint_remove">Quitar</string>
+
+    <!-- Fuentes -->
+    <string name="settings_sources_title">Fuentes</string>
+    <string name="settings_sources_desc">De dónde puede obtener juegos Thorium</string>
+    <string name="sources_title">Fuentes</string>
+    <string name="sources_subtitle">Lugares desde los que Thorium puede descargar juegos. Tú añades las tuyas; no viene ninguna preconfigurada.</string>
+    <string name="sources_add_title">Añadir fuente…</string>
+    <string name="sources_add_desc">Un servidor web, un catálogo JSON, una colección de Internet Archive o una carpeta</string>
+    <string name="sources_status_ok">OK</string>
+    <string name="sources_status_failed">Falló</string>
+    <string name="type_http">Servidor web (listado de directorio)</string>
+    <string name="type_catalog">Catálogo JSON</string>
+    <string name="type_internet_archive">Internet Archive</string>
+    <string name="type_local">Carpeta de este dispositivo</string>
+    <string name="form_title_new">Nueva fuente</string>
+    <string name="form_title_edit">Editar fuente</string>
+    <string name="field_name">Nombre</string>
+    <string name="field_type">Tipo</string>
+    <string name="field_location_http">Dirección web (URL)</string>
+    <string name="field_location_catalog">Dirección del catálogo (URL)</string>
+    <string name="field_location_ia">Identificador de la colección o del ítem</string>
+    <string name="field_location_local">Ruta de la carpeta</string>
+    <string name="field_user">Usuario</string>
+    <string name="field_password">Contraseña</string>
+    <string name="field_access_key">Clave de acceso (opcional)</string>
+    <string name="field_secret_key">Clave secreta (opcional)</string>
+    <string name="field_insecure">Permitir HTTP sin cifrar</string>
+    <string name="field_insecure_desc">Sin cifrado. Solo para servidores de tu propia red.</string>
+    <string name="field_not_set">Sin definir</string>
+    <string name="action_test">Probar conexión</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_delete">Eliminar fuente</string>
+    <string name="test_idle">Comprueba que la dirección y las credenciales funcionan</string>
+    <string name="test_running">Probando…</string>
+    <string name="test_ok">La conexión funciona</string>
+    <string name="test_err_auth">Usuario o contraseña incorrectos o ausentes</string>
+    <string name="test_err_not_found">No se encontró nada en esa dirección</string>
+    <string name="test_err_insecure">El HTTP sin cifrar está desactivado para esta fuente. Activa «Permitir HTTP sin cifrar» o usa https.</string>
+    <string name="test_err_invalid">Revisa la dirección: %1$s</string>
+    <string name="test_err_network">No se pudo conectar con el servidor</string>
+    <string name="test_err_bad">El servidor respondió algo inesperado</string>
+    <string name="toast_source_saved">Fuente guardada</string>
+    <string name="toast_source_removed">Fuente eliminada</string>
+    <string name="toast_source_needs_location">Escribe primero una dirección</string>
 </resources>

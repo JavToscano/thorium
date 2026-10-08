@@ -66,6 +66,24 @@ data class SettingEntity(
     val value: String,
 )
 
+/** A source the user configured. [passwordEnc] is encrypted with a key that never leaves the Android Keystore. */
+@Entity(tableName = "sources")
+data class SourceEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    /** [com.thorium.core.model.SourceType] name. */
+    val type: String,
+    val location: String,
+    val username: String,
+    val passwordEnc: String?,
+    val allowInsecure: Boolean,
+    val enabled: Boolean,
+    val createdAt: Long,
+    /** 1 = last test worked, 0 = failed, null = never tested. */
+    val lastCheckOk: Int?,
+    val lastCheckedAt: Long?,
+)
+
 data class GameWithFiles(
     @Embedded val game: GameEntity,
     @Relation(parentColumn = "id", entityColumn = "gameId") val files: List<GameFileEntity>,

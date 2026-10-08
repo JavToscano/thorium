@@ -11,13 +11,18 @@ import androidx.lifecycle.viewModelScope
 import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
 import com.thorium.core.model.Library
+import com.thorium.core.model.SourceConfig
+import com.thorium.core.model.SourceException
 import com.thorium.app.R
 import com.thorium.app.storage.StorageVolumeInfo
 import com.thorium.app.ui.settings.SettingsController
+import com.thorium.app.ui.settings.SourceDraft
+import com.thorium.app.ui.settings.TestResult
 import com.thorium.app.ui.settings.SettingsHost
 import com.thorium.data.db.ScanSettings
 import com.thorium.data.db.ThoriumData
 import com.thorium.data.library.LibraryScanner
+import com.thorium.data.sources.SourceFactory
 import com.thorium.data.library.PlatformCatalog
 import com.thorium.data.library.ScanStats
 import com.thorium.core.ui.input.GamepadAction
@@ -97,6 +102,7 @@ class AppViewModel : ViewModel() {
     private var data: ThoriumData? = null
 
     private var scanSettings by mutableStateOf(ScanSettings())
+    private var sourceList by mutableStateOf<List<SourceConfig>>(emptyList())
     private var rescanQueued = false
 
     var libraryState by mutableStateOf<LibraryState>(LibraryState.Scanning); private set
@@ -125,6 +131,9 @@ class AppViewModel : ViewModel() {
         }
         viewModelScope.launch {
             data.settings.observeScanSettings().collect { scanSettings = it }
+        }
+        viewModelScope.launch {
+            data.sources.observeSources().collect { sourceList = it }
         }
     }
 
@@ -199,8 +208,52 @@ class AppViewModel : ViewModel() {
         override fun rescan() = refreshLibrary(force = true)
         override fun toast(message: UiText) = showToast(message)
         override val language get() = languageController
+
+        override val sources get() = sourceList
+
+        override fun saveSource(draft: SourceDraft, verified: Boolean) {
+            viewModelScope.launch {
+                val id = data?.sources?.save(draft.toConfig(), draft.password)
+                if (id != null && verified) data?.sources?.recordCheck(id, true)
+                showToast(UiText.res(R.string.toast_source_saved))
+            }
+        }
+
+        override fun removeSource(id: Long) {
+            viewModelScope.launch {
+                data?.sources?.remove(id)
+                showToast(UiText.res(R.string.toast_source_removed))
+            }
+        }
+
+        override fun testSource(draft: SourceDraft, onResult: (TestResult) -> Unit) {
+            viewModelScope.launch {
+                val repository = data?.sources
+                val result = withContext(Dispatchers.IO) {
+                    try {
+                        // An existing source keeps its stored password unless a new one was typed.
+                        val password = draft.password ?: if (draft.id != 0L) repository?.password(draft.id).orEmpty() else ""
+                        SourceFactory.create(draft.toConfig(), password).testConnection()
+                            .fold({ TestResult.Ok }, { TestResult.Failed(explain(it)) })
+                    } catch (e: SourceException) {
+                        TestResult.Failed(explain(e))
+                    }
+                }
+                onResult(result)
+                if (draft.id != 0L) repository?.recordCheck(draft.id, result is TestResult.Ok)
+            }
+        }
         override fun cycleLanguage() { languageController?.cycle() }
     })
+
+    private fun explain(error: Throwable): UiText = when (error) {
+        is SourceException.Unauthorized -> UiText.res(R.string.test_err_auth)
+        is SourceException.NotFound -> UiText.res(R.string.test_err_not_found)
+        is SourceException.InsecureConnection -> UiText.res(R.string.test_err_insecure)
+        is SourceException.InvalidLocation -> UiText.res(R.string.test_err_invalid, error.message.orEmpty())
+        is SourceException.Network -> UiText.res(R.string.test_err_network)
+        else -> UiText.res(R.string.test_err_bad)
+    }
 
     /** Button legend for whatever is on screen. */
     val hints: List<Hint> get() = when {
@@ -318,6 +371,7 @@ class AppViewModel : ViewModel() {
     private fun favoriteGames() = favorites.mapNotNull { id -> library.games.firstOrNull { it.id == id } }
 
     fun handle(action: GamepadAction) {
+        if (settings.keyboard.handle(action)) return
         when {
             menuOpen -> handleMenu(action)
             libraryState is LibraryState.NeedsPermission -> handlePermission(action)

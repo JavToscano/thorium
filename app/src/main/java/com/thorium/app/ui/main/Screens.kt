@@ -38,6 +38,7 @@ import com.thorium.core.model.Game
 import com.thorium.core.ui.components.ActionButton
 import com.thorium.core.ui.components.Cover
 import com.thorium.core.ui.components.HintBar
+import com.thorium.core.ui.keyboard.OnScreenKeyboard
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.text.resolve
 import com.thorium.core.ui.theme.Palette
@@ -64,6 +65,7 @@ fun ThoriumApp(vm: AppViewModel) {
             vm.detail?.let { DetailScreen(it, vm) }
         }
         AnimatedVisibility(vm.menuOpen, enter = fadeIn(), exit = fadeOut()) { MenuOverlay(vm) }
+        OnScreenKeyboard(vm.settings.keyboard)
 
         AnimatedVisibility(
             vm.toast != null,

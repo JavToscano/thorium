@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Reach the sources the user configures. Plain http is additionally gated per source inside the app. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Read ROM folders by real path (sideloaded app; not meant for Google Play). -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
@@ -8,6 +11,7 @@
         android:name=".ThoriumApplication"
         android:label="Thorium"
         android:localeConfig="@xml/locales_config"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.Thorium">
 
         <!--

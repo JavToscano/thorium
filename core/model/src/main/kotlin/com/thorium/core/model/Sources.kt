@@ -29,6 +29,8 @@ data class SourceConfig(
     /** Allows plain `http://`. Off by default; typical for a NAS on the home network. */
     val allowInsecure: Boolean = false,
     val enabled: Boolean = true,
+    /** Result of the last connection test: true worked, false failed, null never tested. */
+    val healthy: Boolean? = null,
 )
 
 /** One file or folder offered by a source. */

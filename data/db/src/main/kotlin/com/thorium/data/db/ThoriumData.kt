@@ -8,6 +8,7 @@ class ThoriumData private constructor(db: ThoriumDatabase) {
 
     val library = LibraryRepository(db)
     val settings = SettingsRepository(db)
+    val sources = SourcesRepository(db, SecretBox())
 
     companion object {
         fun create(context: Context): ThoriumData =

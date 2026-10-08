@@ -41,11 +41,13 @@ fun SettingsScreen(controller: SettingsController) {
         SettingsPage.Folders -> FoldersPage(controller)
         SettingsPage.Browser -> BrowserPage(controller)
         SettingsPage.Setup -> SetupPage(controller)
+        SettingsPage.Sources -> SourcesPage(controller)
+        SettingsPage.SourceForm -> SourceFormPage(controller)
     }
 }
 
 @Composable
-private fun PageFrame(title: String, subtitle: String?, content: @Composable () -> Unit) {
+internal fun PageFrame(title: String, subtitle: String?, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxSize().padding(horizontal = Dimens.ScreenPadding), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(title, color = Palette.TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         if (subtitle != null) {
@@ -57,7 +59,7 @@ private fun PageFrame(title: String, subtitle: String?, content: @Composable () 
 
 /** Vertical list that keeps the focused row in view. */
 @Composable
-private fun <T> FocusList(items: List<T>, focusedIndex: Int, row: @Composable (Int, T, Boolean) -> Unit) {
+internal fun <T> FocusList(items: List<T>, focusedIndex: Int, row: @Composable (Int, T, Boolean) -> Unit) {
     val state = rememberLazyListState()
     LaunchedEffect(focusedIndex) { state.animateScrollToItem((focusedIndex - 1).coerceAtLeast(0)) }
     LazyColumn(
@@ -71,7 +73,7 @@ private fun <T> FocusList(items: List<T>, focusedIndex: Int, row: @Composable (I
 }
 
 @Composable
-private fun ListRow(title: String, detail: String?, focused: Boolean, trailing: String? = null) {
+internal fun ListRow(title: String, detail: String?, focused: Boolean, trailing: String? = null) {
     val bg by animateColorAsState(if (focused) Color(0xFF26324D) else Palette.Panel, label = "row")
     val border by animateColorAsState(if (focused) Palette.Accent else Color.Transparent, label = "rowBorder")
     Row(

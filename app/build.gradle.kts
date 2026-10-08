@@ -36,6 +36,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":data:library"))
     implementation(project(":data:db"))
+    implementation(project(":data:sources"))
     implementation(project(":feature:display"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
