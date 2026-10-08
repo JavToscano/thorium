@@ -259,4 +259,15 @@
     <string name="dl_manage_sources">Manage sources…</string>
     <string name="dl_manage_desc">Add, edit or remove sources in Settings</string>
     <string name="hint_browse">Browse</string>
+
+    <!-- Download speed and the queue on the second screen -->
+    <string name="dl_speed">%1$s/s</string>
+    <string name="dl_eta_seconds">%1$d s left</string>
+    <string name="dl_eta_minutes">%1$d min left</string>
+    <string name="dl_eta_hours">%1$d h %2$d min left</string>
+    <string name="dl_saving_to">Saving to %1$s</string>
+    <string name="dl_source_default">Default console: %1$s</string>
+    <string name="companion_dl_pick">Pick a source on the top screen to browse it, or watch your downloads below.</string>
+    <string name="companion_dl_browse">Press A on the top screen to browse it.</string>
+    <string name="companion_dl_none">No downloads yet.</string>
 </resources>

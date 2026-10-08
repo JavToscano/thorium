@@ -35,16 +35,16 @@ import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
 
 @Composable
-fun DownloadsScreen(c: DownloadsController) {
+fun DownloadsScreen(c: DownloadsController, speeds: Map<Long, Long>) {
     when (c.page) {
-        DownloadsPage.Main -> MainPage(c)
+        DownloadsPage.Main -> MainPage(c, speeds)
         DownloadsPage.Browse -> BrowsePage(c)
         DownloadsPage.PlatformPick -> PlatformPickPage(c)
     }
 }
 
 @Composable
-private fun MainPage(c: DownloadsController) {
+private fun MainPage(c: DownloadsController, speeds: Map<Long, Long>) {
     PageFrame(stringResource(R.string.tab_downloads), null) {
         FocusList(c.rows, c.focusIndex) { _, row, focused ->
             when (row) {
@@ -63,14 +63,14 @@ private fun MainPage(c: DownloadsController) {
                 DownloadsRow.Manage -> ListRow(
                     stringResource(R.string.dl_manage_sources), stringResource(R.string.dl_manage_desc), focused,
                 )
-                is DownloadsRow.Item -> DownloadRow(row.item, focused)
+                is DownloadsRow.Item -> DownloadRow(row.item, focused, speeds[row.item.id])
             }
         }
     }
 }
 
 @Composable
-private fun DownloadRow(item: DownloadItem, focused: Boolean) {
+private fun DownloadRow(item: DownloadItem, focused: Boolean, speed: Long?) {
     val shape = RoundedCornerShape(10.dp)
     Column(
         Modifier.fillMaxWidth().clip(shape)
@@ -86,35 +86,41 @@ private fun DownloadRow(item: DownloadItem, focused: Boolean) {
             )
             Text(stateLabel(item.state), color = stateColor(item.state), fontSize = 13.sp, fontWeight = FontWeight.Bold)
         }
-        Text(detail(item), color = Palette.TextSecondary, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(detail(item, speed), color = Palette.TextSecondary, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
         val progress = item.progress
-        if (!item.state.isFinished && progress != null) {
-            Box(
-                Modifier.padding(top = 6.dp).fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp))
-                    .drawBehind {
-                        drawRect(Color.White.copy(alpha = 0.12f))
-                        drawRect(Palette.Accent, size = Size(size.width * progress, size.height))
-                    }
-            )
-        }
+        if (!item.state.isFinished && progress != null) ProgressBar(progress, Modifier.padding(top = 6.dp))
     }
 }
 
+/** A thin progress bar: [progress] is 0..1. */
 @Composable
-private fun detail(item: DownloadItem): String {
+internal fun ProgressBar(progress: Float, modifier: Modifier = Modifier, height: androidx.compose.ui.unit.Dp = 5.dp) {
+    Box(
+        modifier.fillMaxWidth().height(height).clip(RoundedCornerShape(3.dp))
+            .drawBehind {
+                drawRect(Color.White.copy(alpha = 0.12f))
+                drawRect(Palette.Accent, size = Size(size.width * progress, size.height))
+            }
+    )
+}
+
+@Composable
+internal fun detail(item: DownloadItem, speed: Long?): String {
     val total = item.sizeBytes
     return when {
         item.state == DownloadState.Failed && item.error != null -> stringResource(errorRes(item.error!!))
         item.state == DownloadState.Completed && item.installedPath != null ->
             stringResource(R.string.dl_installed_in, item.installedPath!!.substringBeforeLast('/').substringAfterLast('/'))
-        total != null && total > 0 ->
-            stringResource(R.string.dl_progress, item.entryName, formatBytes(item.bytesDone), formatBytes(total))
+        total != null && total > 0 -> {
+            val base = stringResource(R.string.dl_progress, item.entryName, formatBytes(item.bytesDone), formatBytes(total))
+            if (item.state == DownloadState.Downloading) base + transferExtras(total - item.bytesDone, speed) else base
+        }
         else -> stringResource(R.string.dl_progress_unknown, item.entryName, formatBytes(item.bytesDone))
     }
 }
 
 @Composable
-private fun stateLabel(state: DownloadState): String = stringResource(
+internal fun stateLabel(state: DownloadState): String = stringResource(
     when (state) {
         DownloadState.Queued -> R.string.dl_state_queued
         DownloadState.Downloading -> R.string.dl_state_downloading
@@ -128,14 +134,14 @@ private fun stateLabel(state: DownloadState): String = stringResource(
     }
 )
 
-private fun stateColor(state: DownloadState): Color = when (state) {
+internal fun stateColor(state: DownloadState): Color = when (state) {
     DownloadState.Completed -> Color(0xFF81C784)
     DownloadState.Failed -> Color(0xFFE57373)
     DownloadState.Paused, DownloadState.Cancelled, DownloadState.Queued -> Palette.TextSecondary
     else -> Palette.Accent
 }
 
-private fun errorRes(error: DownloadError): Int = when (error) {
+internal fun errorRes(error: DownloadError): Int = when (error) {
     DownloadError.Network -> R.string.dl_err_network
     DownloadError.Unauthorized -> R.string.dl_err_unauthorized
     DownloadError.NotFound -> R.string.dl_err_not_found
@@ -145,4 +151,18 @@ private fun errorRes(error: DownloadError): Int = when (error) {
     DownloadError.Extraction -> R.string.dl_err_extraction
     DownloadError.Storage -> R.string.dl_err_storage
     DownloadError.Unknown -> R.string.dl_err_unknown
+}
+
+/** " · 1.2 MB/s · 2 min left", or nothing while the speed is still unknown. */
+@Composable
+internal fun transferExtras(remainingBytes: Long, speed: Long?): String {
+    if (speed == null || speed <= 0) return ""
+    val eta = com.thorium.data.downloads.ThroughputMeter.etaSeconds(remainingBytes, speed)
+    val left = when {
+        eta == null -> null
+        eta < 60 -> stringResource(R.string.dl_eta_seconds, eta.toInt())
+        eta < 3600 -> stringResource(R.string.dl_eta_minutes, ((eta + 59) / 60).toInt())
+        else -> stringResource(R.string.dl_eta_hours, (eta / 3600).toInt(), ((eta % 3600) / 60).toInt())
+    }
+    return " · " + stringResource(R.string.dl_speed, formatBytes(speed)) + (left?.let { " · $it" } ?: "")
 }

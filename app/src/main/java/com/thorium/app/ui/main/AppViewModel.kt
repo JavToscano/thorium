@@ -116,6 +116,13 @@ class AppViewModel : ViewModel() {
     /** The download queue as shown in the Downloads tab (finished items last). */
     var downloadItems by mutableStateOf<List<com.thorium.core.model.DownloadItem>>(emptyList()); private set
 
+    /** Current speed in bytes per second of each transfer in progress, smoothed. */
+    var downloadSpeeds by mutableStateOf<Map<Long, Long>>(emptyMap()); private set
+    private val speedMeter = com.thorium.data.downloads.ThroughputMeter()
+
+    /** Downloads that are not finished yet (waiting, running or paused). */
+    val unfinishedDownloads: List<com.thorium.core.model.DownloadItem> get() = downloadItems.filter { !it.state.isFinished }
+
     /** Set by the application once the download queue exists; starts mirroring its items. */
     var downloads: com.thorium.app.downloads.DownloadManager? = null
         set(value) {
@@ -124,6 +131,10 @@ class AppViewModel : ViewModel() {
                 viewModelScope.launch {
                     value.items.collect { all ->
                         downloadItems = all.sortedWith(compareBy({ it.state.isFinished }, { -it.id }))
+                        val now = System.currentTimeMillis()
+                        val running = all.filter { it.state == com.thorium.core.model.DownloadState.Downloading }
+                        downloadSpeeds = running.mapNotNull { item -> speedMeter.record(item.id, item.bytesDone, now)?.let { item.id to it } }.toMap()
+                        speedMeter.retain(running.mapTo(HashSet()) { it.id })
                     }
                 }
             }

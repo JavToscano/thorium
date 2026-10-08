@@ -35,16 +35,23 @@ import java.util.Locale
 @Composable
 fun CompanionScreen(vm: AppViewModel) {
     Box(Modifier.fillMaxSize().background(Palette.Background).padding(horizontal = 20.dp, vertical = 14.dp)) {
-        when (val card = vm.focusedCard) {
-            is CardModel.GameCard -> GameInfo(card.game, card.system, vm.isFavorite(card.game.id))
-            is CardModel.SystemCard -> SystemInfo(card.system, card.gameCount)
-            null -> Idle(settings = vm.tab == Tab.Settings)
+        if (vm.tab == Tab.Downloads) {
+            DownloadsCompanion(vm)
+        } else {
+            // While something downloads, a compact progress list shows on every other tab too.
+            val strip: (@Composable () -> Unit)? = vm.unfinishedDownloads.takeIf { it.isNotEmpty() }
+                ?.let { active -> { DownloadsStrip(active, vm.downloadSpeeds) } }
+            when (val card = vm.focusedCard) {
+                is CardModel.GameCard -> GameInfo(card.game, card.system, vm.isFavorite(card.game.id), strip)
+                is CardModel.SystemCard -> SystemInfo(card.system, card.gameCount, strip)
+                null -> Idle(settings = vm.tab == Tab.Settings, strip = strip)
+            }
         }
     }
 }
 
 @Composable
-private fun GameInfo(game: Game, system: GameSystem, favorite: Boolean) {
+private fun GameInfo(game: Game, system: GameSystem, favorite: Boolean, strip: (@Composable () -> Unit)?) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Cover(game.title, system, focused = false, progress = game.progress, favorite = favorite, width = 120.dp, height = 160.dp)
@@ -60,13 +67,18 @@ private fun GameInfo(game: Game, system: GameSystem, favorite: Boolean) {
                 Text(game.path, color = Palette.TextSecondary, fontSize = 10.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
-        SectionTitle(stringResource(R.string.companion_screenshots))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            repeat(3) {
-                Box(
-                    Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(8.dp)).background(Palette.Panel),
-                    contentAlignment = Alignment.Center,
-                ) { Text(stringResource(R.string.companion_soon), color = Palette.TextSecondary, fontSize = 10.sp) }
+        if (strip != null) {
+            // Downloads in progress take the place of the (still empty) screenshot frames.
+            strip()
+        } else {
+            SectionTitle(stringResource(R.string.companion_screenshots))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                repeat(3) {
+                    Box(
+                        Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(8.dp)).background(Palette.Panel),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(stringResource(R.string.companion_soon), color = Palette.TextSecondary, fontSize = 10.sp) }
+                }
             }
         }
         SectionTitle(stringResource(R.string.companion_controls))
@@ -75,25 +87,29 @@ private fun GameInfo(game: Game, system: GameSystem, favorite: Boolean) {
 }
 
 @Composable
-private fun SystemInfo(system: GameSystem, gameCount: Int) {
+private fun SystemInfo(system: GameSystem, gameCount: Int, strip: (@Composable () -> Unit)?) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(system.name, color = Palette.TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         Text(pluralStringResource(R.plurals.games_count, gameCount, gameCount), color = Palette.Accent, fontSize = 14.sp)
         Text(stringResource(R.string.companion_browse_system), color = Palette.TextSecondary, fontSize = 12.sp)
         Box(Modifier.weight(1f))
+        strip?.invoke()
         SectionTitle(stringResource(R.string.companion_controls))
         Controls()
     }
 }
 
 @Composable
-private fun Idle(settings: Boolean) {
+private fun Idle(settings: Boolean, strip: (@Composable () -> Unit)?) {
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Thorium", color = Palette.TextPrimary, fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Text(
             stringResource(if (settings) R.string.companion_settings_top else R.string.companion_select_game),
             color = Palette.TextSecondary, fontSize = 13.sp,
         )
+        if (strip != null) {
+            Box(Modifier.padding(top = 24.dp).fillMaxWidth()) { strip() }
+        }
     }
 }
 

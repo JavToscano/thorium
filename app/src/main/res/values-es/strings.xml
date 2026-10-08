@@ -264,4 +264,15 @@
     <string name="dl_manage_sources">Gestionar fuentes…</string>
     <string name="dl_manage_desc">Añade, edita o quita fuentes en Ajustes</string>
     <string name="hint_browse">Explorar</string>
+
+    <!-- Velocidad de descarga y la cola en la segunda pantalla -->
+    <string name="dl_speed">%1$s/s</string>
+    <string name="dl_eta_seconds">faltan %1$d s</string>
+    <string name="dl_eta_minutes">faltan %1$d min</string>
+    <string name="dl_eta_hours">faltan %1$d h %2$d min</string>
+    <string name="dl_saving_to">Se guarda en %1$s</string>
+    <string name="dl_source_default">Consola por defecto: %1$s</string>
+    <string name="companion_dl_pick">Elige una fuente en la pantalla superior para explorarla, o mira tus descargas abajo.</string>
+    <string name="companion_dl_browse">Pulsa A en la pantalla superior para explorarla.</string>
+    <string name="companion_dl_none">Aún no hay descargas.</string>
 </resources>
