@@ -2,6 +2,7 @@ package com.thorium.data.library
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class TitleNormalizerTest {
@@ -42,5 +43,20 @@ class TitleNormalizerTest {
     @Test
     fun `falls back to the raw name when everything is a tag`() {
         assertEquals("(USA)", TitleNormalizer.parse("(USA)").title)
+    }
+
+    /** The catalog builder (tools/catalog) applies the same rules; both sides check this shared file. */
+    @Test
+    fun `matches the shared fixtures used by the catalog builder`() {
+        val file = java.io.File("../../tools/catalog/title_fixtures.tsv")
+        val cases = file.readLines().filter { it.isNotBlank() && !it.startsWith("#") }
+        assertTrue(cases.isNotEmpty())
+        for (line in cases) {
+            val cols = line.split("\t")
+            val parsed = TitleNormalizer.parse(cols[0])
+            assertEquals(cols[1], parsed.title, cols[0])
+            assertEquals(cols[2], parsed.matchKey, cols[0])
+            assertEquals(cols.getOrNull(3)?.takeIf { it.isNotEmpty() }?.toInt(), parsed.disc, cols[0])
+        }
     }
 }
