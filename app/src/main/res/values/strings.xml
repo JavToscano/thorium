@@ -274,7 +274,7 @@
     <string name="about_covers_title">Cover art</string>
     <string name="about_covers_text">Cover images come from the libretro thumbnail server (thumbnails.libretro.com), where they are shared for RetroArch. Each image belongs to its respective rights holders.</string>
     <string name="about_libs_title">Open-source components</string>
-    <string name="about_libs_text">Jetpack Compose, Room, Kotlin and kotlinx, OkHttp and Apache Commons Compress (Apache License 2.0); XZ for Java (0BSD).</string>
+    <string name="about_libs_text">Jetpack Compose, Room, Kotlin and kotlinx, OkHttp and Apache Commons Compress (Apache License 2.0); XZ for Java (0BSD); M PLUS Rounded 1c font in the Sakura Night theme (SIL Open Font License 1.1).</string>
     <string name="settings_covers_title">Cover art</string>
     <string name="settings_covers_desc">Downloads each game\'s cover from thumbnails.libretro.com. Only the game\'s name is sent.</string>
     <string name="companion_screenshots">Screenshots</string>

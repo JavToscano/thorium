@@ -264,6 +264,7 @@ class AppViewModel : ViewModel() {
         override val coversEnabled get() = this@AppViewModel.coversEnabled
         override val themeEntries get() = themeController?.entries.orEmpty()
         override val activeThemeId get() = themeController?.activeId ?: "thorium"
+        override fun rescanThemes() { themeController?.rescan() }
         override fun selectTheme(id: String) { themeController?.select(id) }
         override val themeSounds get() = themeController?.soundsEnabled ?: true
         override fun setThemeSounds(enabled: Boolean) { themeController?.setSounds(enabled) }

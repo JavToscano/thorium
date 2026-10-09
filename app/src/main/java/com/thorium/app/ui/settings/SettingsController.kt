@@ -55,6 +55,8 @@ interface SettingsHost : SourcesHost {
     val companionEnabled: Boolean
     val coversEnabled: Boolean
     val themeEntries: List<com.thorium.app.theme.ThemeEntry>
+    /** Looks again for installed themes (the player may have just copied one). */
+    fun rescanThemes()
     val activeThemeId: String
     fun selectTheme(id: String)
     val themeSounds: Boolean
@@ -199,6 +201,7 @@ class SettingsController(internal val host: SettingsHost) {
                 SettingsItem.DualScreen -> host.setCompanionEnabled(!host.companionEnabled)
                 SettingsItem.Covers -> host.setCoversEnabled(!host.coversEnabled)
                 SettingsItem.Themes -> {
+                    host.rescanThemes()
                     page = SettingsPage.Themes
                     themesIndex = host.themeEntries.indexOfFirst { it.spec.id == host.activeThemeId }.coerceAtLeast(0)
                 }
