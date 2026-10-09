@@ -1,0 +1,102 @@
+{
+  "id": "hyrule-dawn",
+  "name": "Hyrule Dawn",
+  "author": "Thorium",
+  "description": "Adventure at sunrise: green hills, a far castle and a sword in its stone. Original art, inspired by classic fantasy adventures.",
+  "version": 1,
+  "colors": {
+    "backgroundTop": "#0F3A44",
+    "backgroundBottom": "#0B2A1F",
+    "accent": "#F0C85A",
+    "accentAlt": "#8EE3B0",
+    "panel": "#10281FCC",
+    "panelFocused": "#1E4A36F0",
+    "textPrimary": "#FBF5DD",
+    "textSecondary": "#E4EED4",
+    "success": "#9BE7A8",
+    "danger": "#FF8E78",
+    "warning": "#FFD76A",
+    "onAccent": "#2B1F06"
+  },
+  "shapes": {
+    "cardRadius": 10,
+    "panelRadius": 10,
+    "border": 3
+  },
+  "motion": {
+    "focusScale": 1.1,
+    "focusLift": 8,
+    "glow": true,
+    "glowPulse": true,
+    "shine": true,
+    "entrance": true,
+    "tabSlideMs": 300,
+    "pageMs": 260
+  },
+  "background": {
+    "layers": [
+      {
+        "image": "images/bg_sky.webp",
+        "parallax": 0.0,
+        "drift": 0.0
+      },
+      {
+        "image": "images/bg_hills.webp",
+        "parallax": 0.5,
+        "drift": 0.2
+      },
+      {
+        "image": "images/bg_front.webp",
+        "parallax": 1.0,
+        "drift": 0.1
+      }
+    ],
+    "vignette": 0.35,
+    "gradientShift": true
+  },
+  "particles": {
+    "kind": "orb",
+    "count": 30,
+    "speed": 0.7,
+    "sizeMin": 7,
+    "sizeMax": 16,
+    "colors": [
+      "#FFE9A0",
+      "#F0C85A",
+      "#CFF5C0"
+    ],
+    "sway": 1.4
+  },
+  "tabs": {
+    "home": {
+      "icon": "icons/home.png"
+    },
+    "systems": {
+      "icon": "icons/systems.png"
+    },
+    "favorites": {
+      "icon": "icons/favorites.png"
+    },
+    "downloads": {
+      "icon": "icons/downloads.png"
+    },
+    "settings": {
+      "icon": "icons/settings.png"
+    }
+  },
+  "sounds": {
+    "move": "sounds/move.wav",
+    "select": "sounds/select.wav",
+    "back": "sounds/back.wav",
+    "tab": "sounds/tab.wav",
+    "favorite": "sounds/favorite.wav",
+    "menu": "sounds/menu.wav",
+    "launch": "sounds/launch.wav",
+    "startup": "sounds/startup.wav",
+    "done": "sounds/done.wav",
+    "error": "sounds/error.wav"
+  },
+  "font": {
+    "regular": "fonts/Marcellus-Regular.ttf"
+  }
+}

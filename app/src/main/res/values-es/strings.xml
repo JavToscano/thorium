@@ -279,7 +279,7 @@
     <string name="about_covers_title">Carátulas</string>
     <string name="about_covers_text">Las imágenes de carátula vienen del servidor de miniaturas de libretro (thumbnails.libretro.com), donde se comparten para RetroArch. Cada imagen pertenece a sus respectivos titulares de derechos.</string>
     <string name="about_libs_title">Componentes de código abierto</string>
-    <string name="about_libs_text">Jetpack Compose, Room, Kotlin y kotlinx, OkHttp y Apache Commons Compress (licencia Apache 2.0); XZ for Java (0BSD); fuente M PLUS Rounded 1c en el tema Sakura Night (SIL Open Font License 1.1).</string>
+    <string name="about_libs_text">Jetpack Compose, Room, Kotlin y kotlinx, OkHttp y Apache Commons Compress (licencia Apache 2.0); XZ for Java (0BSD); fuentes M PLUS Rounded 1c (Sakura Night) y Marcellus (Hyrule Dawn), ambas con la licencia SIL Open Font License 1.1.</string>
     <string name="settings_covers_title">Carátulas</string>
     <string name="settings_covers_desc">Descarga la carátula de cada juego de thumbnails.libretro.com. Solo se envía el nombre del juego.</string>
     <string name="companion_screenshots">Capturas</string>
