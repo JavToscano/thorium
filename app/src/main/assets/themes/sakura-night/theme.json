@@ -2,7 +2,8 @@
   "id": "sakura-night",
   "name": "Sakura Night",
   "author": "Thorium",
-  "description": "Anime-style night with cherry blossoms.",
+  "description": "Anime-style night: moonlit Fuji, cherry blossoms and koto sounds.",
+  "version": 1,
   "colors": {
     "backgroundTop": "#0B0A1E",
     "backgroundBottom": "#2A1233",
@@ -11,7 +12,98 @@
     "panel": "#1E1634CC",
     "panelFocused": "#3B2354F0",
     "textPrimary": "#FFF4F8",
-    "textSecondary": "#C9B6D9",
+    "textSecondary": "#CDBAE0",
+    "success": "#9BE7B0",
+    "danger": "#FF7A8A",
+    "warning": "#FFD58A",
     "onAccent": "#2A0F1E"
+  },
+  "shapes": {
+    "cardRadius": 16,
+    "panelRadius": 14,
+    "border": 3
+  },
+  "motion": {
+    "focusScale": 1.12,
+    "focusLift": 8,
+    "glow": true,
+    "glowPulse": true,
+    "shine": true,
+    "entrance": true,
+    "tabSlideMs": 320,
+    "pageMs": 280
+  },
+  "background": {
+    "layers": [
+      {
+        "image": "images/bg_sky.webp",
+        "parallax": 0.0,
+        "drift": 0.0
+      },
+      {
+        "image": "images/bg_mountains.webp",
+        "parallax": 0.5,
+        "drift": 0.25
+      },
+      {
+        "image": "images/bg_front.webp",
+        "parallax": 1.0,
+        "drift": 0.15
+      }
+    ],
+    "vignette": 0.5,
+    "gradientShift": true
+  },
+  "particles": {
+    "kind": "petal",
+    "count": 26,
+    "speed": 1.0,
+    "sizeMin": 7,
+    "sizeMax": 15,
+    "colors": [
+      "#FFB7D0",
+      "#FF8FB8",
+      "#FFE0EC",
+      "#FFC8DC"
+    ],
+    "sway": 1.0
+  },
+  "tabs": {
+    "home": {
+      "icon": "icons/home.png",
+      "sub": "ホーム"
+    },
+    "systems": {
+      "icon": "icons/systems.png",
+      "sub": "コンソール"
+    },
+    "favorites": {
+      "icon": "icons/favorites.png",
+      "sub": "お気に入り"
+    },
+    "downloads": {
+      "icon": "icons/downloads.png",
+      "sub": "ダウンロード"
+    },
+    "settings": {
+      "icon": "icons/settings.png",
+      "sub": "設定"
+    }
+  },
+  "sounds": {
+    "move": "sounds/move.wav",
+    "select": "sounds/select.wav",
+    "back": "sounds/back.wav",
+    "tab": "sounds/tab.wav",
+    "favorite": "sounds/favorite.wav",
+    "menu": "sounds/menu.wav",
+    "launch": "sounds/launch.wav",
+    "startup": "sounds/startup.wav",
+    "done": "sounds/done.wav",
+    "error": "sounds/error.wav"
+  },
+  "font": {
+    "regular": "fonts/MPLUSRounded1c-Regular-subset.ttf",
+    "bold": "fonts/MPLUSRounded1c-Bold-subset.ttf"
   }
 }
