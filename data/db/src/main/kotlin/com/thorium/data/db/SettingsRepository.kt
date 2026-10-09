@@ -50,6 +50,19 @@ class SettingsRepository internal constructor(db: ThoriumDatabase) {
 
     suspend fun setCoversEnabled(enabled: Boolean) = setBoolean(KEY_COVERS, enabled)
 
+    /** Id of the chosen theme; "thorium" is the built-in look. */
+    suspend fun themeId(): String = dao.getSetting(KEY_THEME) ?: "thorium"
+
+    suspend fun setThemeId(id: String) = dao.upsertSetting(SettingEntity(KEY_THEME, id))
+
+    suspend fun isThemeSoundsEnabled(): Boolean = dao.getSetting(KEY_THEME_SOUNDS)?.let(::parseBoolean) ?: true
+
+    suspend fun setThemeSoundsEnabled(enabled: Boolean) = setBoolean(KEY_THEME_SOUNDS, enabled)
+
+    suspend fun isAnimationsEnabled(): Boolean = dao.getSetting(KEY_ANIMATIONS)?.let(::parseBoolean) ?: true
+
+    suspend fun setAnimationsEnabled(enabled: Boolean) = setBoolean(KEY_ANIMATIONS, enabled)
+
     private suspend fun setBoolean(key: String, value: Boolean) =
         dao.upsertSetting(SettingEntity(key, if (value) "1" else "0"))
 
@@ -59,5 +72,8 @@ class SettingsRepository internal constructor(db: ThoriumDatabase) {
         const val KEY_AUTO_DETECT = "autoDetectStorage"
         const val KEY_COMPANION = "companionEnabled"
         const val KEY_COVERS = "coversEnabled"
+        const val KEY_THEME = "theme"
+        const val KEY_THEME_SOUNDS = "themeSounds"
+        const val KEY_ANIMATIONS = "animations"
     }
 }

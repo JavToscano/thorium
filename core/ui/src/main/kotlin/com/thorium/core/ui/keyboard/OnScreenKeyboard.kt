@@ -59,7 +59,7 @@ fun OnScreenKeyboard(controller: KeyboardController, modifier: Modifier = Modifi
 private fun TextField(controller: KeyboardController) {
     val shown = if (controller.masked) "•".repeat(controller.text.length) else controller.text
     Box(
-        Modifier.fillMaxWidth().height(34.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF0E1220))
+        Modifier.fillMaxWidth().height(34.dp).clip(RoundedCornerShape(8.dp)).background(Palette.BackgroundBottom)
             .border(1.dp, Palette.Accent.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.CenterStart,
@@ -75,7 +75,7 @@ private fun TextField(controller: KeyboardController) {
 
 @Composable
 private fun KeyCap(label: String, focused: Boolean, weight: Float, modifier: Modifier = Modifier) {
-    val bg by animateColorAsState(if (focused) Palette.Accent else Color(0xFF2A3350), label = "key")
+    val bg by animateColorAsState(if (focused) Palette.Accent else Palette.PanelFocused, label = "key")
     Box(
         modifier.height(34.dp).clip(RoundedCornerShape(7.dp)).background(bg),
         contentAlignment = Alignment.Center,

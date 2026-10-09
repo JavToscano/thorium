@@ -17,7 +17,7 @@ import com.thorium.data.library.FolderInitializer
 import com.thorium.data.library.SetupEntry
 import java.io.File
 
-enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, SourceConsole, About }
+enum class SettingsPage { Main, Folders, Browser, Setup, Sources, SourceForm, SourceConsole, About, Themes }
 
 /** One selectable row of the "Game folders" page. */
 sealed interface FolderRow {
@@ -32,9 +32,17 @@ enum class SettingsItem(@StringRes val title: Int, @StringRes val description: I
     Sources(R.string.settings_sources_title, R.string.settings_sources_desc),
     DualScreen(R.string.settings_dual_title, R.string.settings_dual_desc),
     Covers(R.string.settings_covers_title, R.string.settings_covers_desc),
+    Themes(R.string.settings_themes_title, R.string.settings_themes_desc),
     Language(R.string.settings_language_title, R.string.settings_language_desc),
     Rescan(R.string.settings_rescan_title, null),
     About(R.string.settings_about_title, R.string.settings_about_desc),
+}
+
+/** One selectable row of the Themes page. */
+sealed interface ThemeRow {
+    data class Theme(val entry: com.thorium.app.theme.ThemeEntry) : ThemeRow
+    data object Sounds : ThemeRow
+    data object Animations : ThemeRow
 }
 
 /** A folder shown in the folder browser. */
@@ -46,6 +54,13 @@ interface SettingsHost : SourcesHost {
     val customRoots: List<String>
     val companionEnabled: Boolean
     val coversEnabled: Boolean
+    val themeEntries: List<com.thorium.app.theme.ThemeEntry>
+    val activeThemeId: String
+    fun selectTheme(id: String)
+    val themeSounds: Boolean
+    fun setThemeSounds(enabled: Boolean)
+    val animations: Boolean
+    fun setAnimations(enabled: Boolean)
     fun setCoversEnabled(enabled: Boolean)
     fun volumes(): List<StorageVolumeInfo>
     fun gamesIn(path: String): Int
@@ -83,6 +98,7 @@ class SettingsController(internal val host: SettingsHost) {
     var foldersIndex by mutableIntStateOf(0); private set
     var browserIndex by mutableIntStateOf(0); private set
     var aboutIndex by mutableIntStateOf(0); private set
+    var themesIndex by mutableIntStateOf(0); private set
 
     /** Folder being browsed; null means the list of storage volumes. */
     var browserDir by mutableStateOf<File?>(null); private set
@@ -96,6 +112,10 @@ class SettingsController(internal val host: SettingsHost) {
 
     val companionOn: Boolean get() = host.companionEnabled
     val coversOn: Boolean get() = host.coversEnabled
+    val activeThemeName: String get() = host.themeEntries.firstOrNull { it.spec.id == host.activeThemeId }?.spec?.name.orEmpty()
+
+    val themeRows: List<ThemeRow>
+        get() = host.themeEntries.map { ThemeRow.Theme(it) } + ThemeRow.Sounds + ThemeRow.Animations
     val languageChoice: LanguageChoice get() = host.language?.current() ?: LanguageChoice.System
 
     /** Rows of the main page, in order; the Language row only exists when the system supports it. */
@@ -105,6 +125,7 @@ class SettingsController(internal val host: SettingsHost) {
             add(SettingsItem.Sources)
             add(SettingsItem.DualScreen)
             add(SettingsItem.Covers)
+            add(SettingsItem.Themes)
             if (host.language != null) add(SettingsItem.Language)
             add(SettingsItem.Rescan)
             add(SettingsItem.About)
@@ -136,6 +157,7 @@ class SettingsController(internal val host: SettingsHost) {
             SettingsPage.SourceForm -> sourcesUi.formHints
             SettingsPage.SourceConsole -> sourcesUi.consoleHints
             SettingsPage.About -> listOf(Hint("B", R.string.hint_back))
+            SettingsPage.Themes -> listOf(Hint("A", R.string.hint_apply), Hint("B", R.string.hint_back))
         }
 
     private val keyboardHints = listOf(
@@ -163,6 +185,7 @@ class SettingsController(internal val host: SettingsHost) {
         SettingsPage.SourceForm -> sourcesUi.handleForm(action)
         SettingsPage.SourceConsole -> sourcesUi.handleConsole(action)
         SettingsPage.About -> handleAbout(action)
+        SettingsPage.Themes -> handleThemes(action)
     }
 
     private fun handleMain(action: GamepadAction): Boolean {
@@ -175,10 +198,31 @@ class SettingsController(internal val host: SettingsHost) {
                 SettingsItem.Sources -> page = SettingsPage.Sources
                 SettingsItem.DualScreen -> host.setCompanionEnabled(!host.companionEnabled)
                 SettingsItem.Covers -> host.setCoversEnabled(!host.coversEnabled)
+                SettingsItem.Themes -> {
+                    page = SettingsPage.Themes
+                    themesIndex = host.themeEntries.indexOfFirst { it.spec.id == host.activeThemeId }.coerceAtLeast(0)
+                }
                 SettingsItem.Language -> host.cycleLanguage()
                 SettingsItem.Rescan -> host.rescan()
                 SettingsItem.About -> { page = SettingsPage.About; aboutIndex = 0 }
             }
+            else -> return false
+        }
+        return true
+    }
+
+    private fun handleThemes(action: GamepadAction): Boolean {
+        val rows = themeRows
+        themesIndex = themesIndex.coerceIn(0, rows.size - 1)
+        when (action) {
+            GamepadAction.Up -> themesIndex = (themesIndex - 1).coerceAtLeast(0)
+            GamepadAction.Down -> themesIndex = (themesIndex + 1).coerceAtMost(rows.size - 1)
+            GamepadAction.Select -> when (val row = rows[themesIndex]) {
+                is ThemeRow.Theme -> host.selectTheme(row.entry.spec.id)
+                ThemeRow.Sounds -> host.setThemeSounds(!host.themeSounds)
+                ThemeRow.Animations -> host.setAnimations(!host.animations)
+            }
+            GamepadAction.Back -> page = SettingsPage.Main
             else -> return false
         }
         return true

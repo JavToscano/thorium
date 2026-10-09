@@ -106,7 +106,7 @@ private fun QueueRow(item: DownloadItem, speed: Long?, highlighted: Boolean) {
     val shape = RoundedCornerShape(8.dp)
     Column(
         Modifier.fillMaxWidth().clip(shape)
-            .background(if (highlighted) Color(0xFF26324D) else Palette.Panel)
+            .background(if (highlighted) Palette.PanelFocused else Palette.Panel)
             .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {

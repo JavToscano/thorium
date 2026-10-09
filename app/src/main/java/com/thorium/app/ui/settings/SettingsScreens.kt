@@ -45,6 +45,7 @@ fun SettingsScreen(controller: SettingsController) {
         SettingsPage.SourceForm -> SourceFormPage(controller)
         SettingsPage.SourceConsole -> SourceConsolePage(controller)
         SettingsPage.About -> AboutPage(controller)
+        SettingsPage.Themes -> ThemesPage(controller)
     }
 }
 
@@ -76,7 +77,7 @@ internal fun <T> FocusList(items: List<T>, focusedIndex: Int, row: @Composable (
 
 @Composable
 internal fun ListRow(title: String, detail: String?, focused: Boolean, trailing: String? = null) {
-    val bg by animateColorAsState(if (focused) Color(0xFF26324D) else Palette.Panel, label = "row")
+    val bg by animateColorAsState(if (focused) Palette.PanelFocused else Palette.Panel, label = "row")
     val border by animateColorAsState(if (focused) Palette.Accent else Color.Transparent, label = "rowBorder")
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(bg)
@@ -107,7 +108,7 @@ private fun AboutPage(c: SettingsController) {
     )
     PageFrame(stringResource(R.string.about_title), null) {
         FocusList(blocks, c.aboutIndex) { _, block, focused ->
-            val bg by animateColorAsState(if (focused) Color(0xFF26324D) else Palette.Panel, label = "aboutRow")
+            val bg by animateColorAsState(if (focused) Palette.PanelFocused else Palette.Panel, label = "aboutRow")
             Column(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(bg)
                     .border(2.dp, if (focused) Palette.Accent else Color.Transparent, RoundedCornerShape(10.dp))
@@ -115,6 +116,35 @@ private fun AboutPage(c: SettingsController) {
             ) {
                 Text(stringResource(block.first), color = Palette.TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Text(block.second, color = Palette.TextSecondary, fontSize = 13.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemesPage(c: SettingsController) {
+    PageFrame(stringResource(R.string.themes_title), stringResource(R.string.themes_subtitle)) {
+        FocusList(c.themeRows, c.themesIndex) { _, row, focused ->
+            when (row) {
+                is ThemeRow.Theme -> {
+                    val spec = row.entry.spec
+                    val active = spec.id == c.host.activeThemeId
+                    val by = if (spec.author.isNotBlank()) stringResource(R.string.themes_by, spec.author) else null
+                    ListRow(
+                        title = spec.name,
+                        detail = listOfNotNull(by, spec.description.takeIf { it.isNotBlank() }).joinToString(" · ").ifBlank { null },
+                        focused = focused,
+                        trailing = if (active) stringResource(R.string.themes_active) else null,
+                    )
+                }
+                ThemeRow.Sounds -> ListRow(
+                    stringResource(R.string.themes_sounds), stringResource(R.string.themes_sounds_desc), focused,
+                    trailing = stringResource(if (c.host.themeSounds) R.string.value_on else R.string.value_off),
+                )
+                ThemeRow.Animations -> ListRow(
+                    stringResource(R.string.themes_animations), stringResource(R.string.themes_animations_desc), focused,
+                    trailing = stringResource(if (c.host.animations) R.string.value_on else R.string.value_off),
+                )
             }
         }
     }
@@ -137,6 +167,7 @@ private fun MainPage(c: SettingsController) {
                     title, description, focused,
                     trailing = stringResource(if (c.coversOn) R.string.value_on else R.string.value_off),
                 )
+                SettingsItem.Themes -> ListRow(title, description, focused, trailing = c.activeThemeName)
                 SettingsItem.Language -> ListRow(title, description, focused, trailing = languageName(c.languageChoice))
                 else -> ListRow(title, description, focused)
             }

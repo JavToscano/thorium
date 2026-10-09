@@ -286,4 +286,15 @@
     <string name="toast_no_emulator">No hay un emulador instalado para %1$s</string>
     <string name="toast_game_missing">Falta el archivo de %1$s</string>
     <string name="toast_launch_failed">No se pudo iniciar %1$s</string>
+    <string name="settings_themes_title">Tema</string>
+    <string name="settings_themes_desc">Colores, animaciones, sonidos y aspecto</string>
+    <string name="themes_title">Temas</string>
+    <string name="themes_subtitle">A aplica un tema al instante. Pon los tuyos en Thorium/themes de tu almacenamiento.</string>
+    <string name="themes_by">por %1$s</string>
+    <string name="themes_active">En uso</string>
+    <string name="themes_sounds">Sonidos del tema</string>
+    <string name="themes_sounds_desc">Reproduce los sonidos del tema al moverte</string>
+    <string name="themes_animations">Animaciones</string>
+    <string name="themes_animations_desc">Partículas, brillo y destellos; apágalas para una pantalla más tranquila</string>
+    <string name="hint_apply">Aplicar</string>
 </resources>

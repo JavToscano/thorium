@@ -1,0 +1,17 @@
+{
+  "id": "sakura-night",
+  "name": "Sakura Night",
+  "author": "Thorium",
+  "description": "Anime-style night with cherry blossoms.",
+  "colors": {
+    "backgroundTop": "#0B0A1E",
+    "backgroundBottom": "#2A1233",
+    "accent": "#FF8FB8",
+    "accentAlt": "#7DF9FF",
+    "panel": "#1E1634CC",
+    "panelFocused": "#3B2354F0",
+    "textPrimary": "#FFF4F8",
+    "textSecondary": "#C9B6D9",
+    "onAccent": "#2A0F1E"
+  }
+}

@@ -56,6 +56,7 @@ class ThoriumApplication : Application(), ViewModelStoreOwner {
             it.storageVolumes = { StorageRoots.volumes(this) }
             val data = ThoriumData.create(this)
             it.attachData(data)
+            it.themeController = com.thorium.app.theme.ThemeController(this, data.settings, appScope).also { themes -> themes.start() }
             downloads = DownloadManager(data) { it.currentScanRoots() }.also { manager ->
                 it.downloads = manager
                 manager.start()

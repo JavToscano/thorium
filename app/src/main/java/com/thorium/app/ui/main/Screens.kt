@@ -44,11 +44,12 @@ import com.thorium.core.ui.keyboard.OnScreenKeyboard
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.text.resolve
 import com.thorium.core.ui.theme.Palette
+import com.thorium.core.ui.theme.ThemedBackground
 import java.util.Locale
 
 @Composable
 fun ThoriumApp(vm: AppViewModel) {
-    Box(Modifier.fillMaxSize().background(Palette.Background)) {
+    ThemedBackground {
         Column(Modifier.fillMaxSize()) {
             TabBar(vm.tab)
             Box(Modifier.weight(1f).fillMaxWidth()) {

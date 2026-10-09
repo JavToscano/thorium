@@ -74,7 +74,7 @@ private fun DownloadRow(item: DownloadItem, focused: Boolean, speed: Long?) {
     val shape = RoundedCornerShape(10.dp)
     Column(
         Modifier.fillMaxWidth().clip(shape)
-            .background(if (focused) Color(0xFF26324D) else Palette.Panel)
+            .background(if (focused) Palette.PanelFocused else Palette.Panel)
             .border(2.dp, if (focused) Palette.Accent else Color.Transparent, shape)
             .padding(horizontal = 16.dp, vertical = 10.dp),
     ) {
@@ -135,8 +135,8 @@ internal fun stateLabel(state: DownloadState): String = stringResource(
 )
 
 internal fun stateColor(state: DownloadState): Color = when (state) {
-    DownloadState.Completed -> Color(0xFF81C784)
-    DownloadState.Failed -> Color(0xFFE57373)
+    DownloadState.Completed -> Palette.Success
+    DownloadState.Failed -> Palette.Danger
     DownloadState.Paused, DownloadState.Cancelled, DownloadState.Queued -> Palette.TextSecondary
     else -> Palette.Accent
 }

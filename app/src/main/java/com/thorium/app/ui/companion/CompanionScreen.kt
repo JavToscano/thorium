@@ -30,12 +30,14 @@ import com.thorium.core.model.Game
 import com.thorium.core.model.GameSystem
 import com.thorium.core.ui.components.Cover
 import com.thorium.core.ui.theme.Palette
+import com.thorium.core.ui.theme.ThemedBackground
 import java.util.Locale
 
 /** Bottom-screen panel: details of whatever the top screen currently has in focus. */
 @Composable
 fun CompanionScreen(vm: AppViewModel) {
-    Box(Modifier.fillMaxSize().background(Palette.Background).padding(horizontal = 20.dp, vertical = 14.dp)) {
+    ThemedBackground {
+        Box(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 14.dp)) {
         if (vm.tab == Tab.Downloads) {
             DownloadsCompanion(vm)
         } else {
@@ -55,6 +57,7 @@ fun CompanionScreen(vm: AppViewModel) {
                 is CardModel.SystemCard -> SystemInfo(card.system, card.gameCount, strip)
                 null -> Idle(settings = vm.tab == Tab.Settings, strip = strip)
             }
+        }
         }
     }
 }

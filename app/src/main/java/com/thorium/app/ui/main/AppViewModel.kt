@@ -154,6 +154,9 @@ class AppViewModel : ViewModel() {
     /** Starts games in external emulators; set by the application. */
     var launcherProvider: () -> EmulatorLauncher? = { null }
 
+    /** Themes; set by the application. */
+    var themeController: com.thorium.app.theme.ThemeController? = null
+
     /** Cover downloads; set by the application, like [catalogProvider]. */
     var coverProvider: () -> com.thorium.core.model.CoverArt? = { null }
 
@@ -239,6 +242,13 @@ class AppViewModel : ViewModel() {
         override val customRoots get() = scanSettings.customRoots
         override val companionEnabled get() = this@AppViewModel.companionEnabled
         override val coversEnabled get() = this@AppViewModel.coversEnabled
+        override val themeEntries get() = themeController?.entries.orEmpty()
+        override val activeThemeId get() = themeController?.activeId ?: "thorium"
+        override fun selectTheme(id: String) { themeController?.select(id) }
+        override val themeSounds get() = themeController?.soundsEnabled ?: true
+        override fun setThemeSounds(enabled: Boolean) { themeController?.setSounds(enabled) }
+        override val animations get() = themeController?.animationsEnabled ?: true
+        override fun setAnimations(enabled: Boolean) { themeController?.setAnimations(enabled) }
         override fun setCoversEnabled(enabled: Boolean) {
             this@AppViewModel.coversEnabled = enabled
             gameArt.setDownloadEnabled(enabled)

@@ -80,7 +80,7 @@ fun Cover(
             )
         }
         if (favorite) {
-            Text("★", modifier = Modifier.align(Alignment.TopEnd).padding(8.dp), color = Color(0xFFFFD54F), fontSize = 14.sp)
+            Text("★", modifier = Modifier.align(Alignment.TopEnd).padding(8.dp), color = Palette.Warning, fontSize = 14.sp)
         }
         if (art == null) {
             Text(
