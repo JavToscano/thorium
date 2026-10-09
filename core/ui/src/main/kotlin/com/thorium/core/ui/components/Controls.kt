@@ -2,6 +2,7 @@ package com.thorium.core.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -21,19 +22,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
+import com.thorium.core.ui.theme.ThemeShapes
+import com.thorium.core.ui.theme.ThemeState
 
 /** Button drawn from the logical focus state; it never takes real Compose focus. */
 @Composable
 fun ActionButton(label: String, focused: Boolean, modifier: Modifier = Modifier) {
-    val scale = focusScale(focused)
     val bg by animateColorAsState(if (focused) Palette.Accent else Palette.Panel, label = "btn")
     Box(
-        modifier.graphicsLayer { scaleX = scale; scaleY = scale }
-            .clip(RoundedCornerShape(10.dp)).background(bg)
+        modifier
+            .focusLayer(focused)
+            .focusGlow(focused, ThemeState.spec.shapes.panelRadius.dp)
+            .clip(ThemeShapes.Panel).background(bg)
+            .focusShine(focused)
             .padding(horizontal = 22.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, color = if (focused) Color.Black else Palette.TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        Text(label, color = if (focused) Palette.OnAccent else Palette.TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -48,7 +53,7 @@ fun HintBar(hints: List<Pair<String, String>>) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(
                     button,
-                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Palette.Panel).padding(horizontal = 6.dp, vertical = 2.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Palette.Panel).border(1.dp, Palette.Accent.copy(alpha = 0.35f), RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
                     color = Palette.TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold,
                 )
                 Text(label, color = Palette.TextSecondary, fontSize = 11.sp)

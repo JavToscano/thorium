@@ -11,7 +11,9 @@ import com.thorium.core.ui.theme.ThemeAssets
 import com.thorium.core.ui.theme.ThemeLoader
 import com.thorium.core.ui.theme.ThemeSource
 import com.thorium.core.ui.theme.ThemeSpec
+import com.thorium.core.ui.theme.ThemeSounds
 import com.thorium.core.ui.theme.ThemeState
+import com.thorium.core.ui.theme.UiSound
 import com.thorium.data.db.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +42,12 @@ class ThemeController(
     /** Called whenever a theme's files finish loading, so the sound player can pick up its sounds. */
     var onAssets: (ThemeSpec, ThemeAssets) -> Unit = { _, _ -> }
 
+    /** The sounds of the active theme. */
+    val sounds = ThemeSounds()
+
     private var loading: Job? = null
+    private var startupPlayed = false
+    private var previewOnLoad = false
 
     /** Reads the saved choice and applies it; call before the first screen is drawn. */
     fun start() {
@@ -50,6 +57,7 @@ class ThemeController(
             animationsEnabled = settings.isAnimationsEnabled()
         }
         ThemeState.animations = animationsEnabled
+        sounds.enabled = soundsEnabled
         rescan()
         apply(entries.firstOrNull { it.spec.id == activeId } ?: DEFAULT)
     }
@@ -66,12 +74,14 @@ class ThemeController(
     fun select(id: String) {
         val entry = entries.firstOrNull { it.spec.id == id } ?: return
         activeId = id
+        previewOnLoad = true
         apply(entry)
         scope.launch { settings.setThemeId(id) }
     }
 
     fun setSounds(enabled: Boolean) {
         soundsEnabled = enabled
+        sounds.enabled = enabled
         scope.launch { settings.setThemeSoundsEnabled(enabled) }
     }
 
@@ -87,6 +97,7 @@ class ThemeController(
         ThemeState.apply(entry.spec, ThemeAssets.Empty)
         val source = entry.source
         if (source == null) {
+            sounds.load(emptyMap())
             onAssets(entry.spec, ThemeAssets.Empty)
             return
         }
@@ -95,6 +106,15 @@ class ThemeController(
             // Compose state may be written from any thread.
             if (activeId == entry.spec.id) {
                 ThemeState.apply(entry.spec, assets)
+                sounds.load(assets.soundFiles)
+                if (!startupPlayed) {
+                    startupPlayed = true
+                    sounds.playWhenReady(UiSound.Startup)
+                } else if (previewOnLoad) {
+                    // Choosing a theme gives a taste of its sounds.
+                    sounds.playWhenReady(UiSound.Select)
+                }
+                previewOnLoad = false
                 onAssets(entry.spec, assets)
             }
         }

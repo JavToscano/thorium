@@ -26,6 +26,7 @@ import com.thorium.app.ui.settings.TestResult
 import com.thorium.app.ui.settings.SettingsHost
 import com.thorium.data.db.ScanSettings
 import com.thorium.data.db.ThoriumData
+import com.thorium.core.ui.theme.UiSound
 import com.thorium.feature.launcher.EmulatorLauncher
 import com.thorium.feature.launcher.LaunchResult
 import com.thorium.data.library.LibraryScanner
@@ -132,6 +133,7 @@ class AppViewModel : ViewModel() {
             if (value != null) {
                 viewModelScope.launch {
                     value.items.collect { all ->
+                        notifyDownloadSounds(all)
                         downloadItems = all.sortedWith(compareBy({ it.state.isFinished }, { -it.id }))
                         val now = System.currentTimeMillis()
                         val running = all.filter { it.state == com.thorium.core.model.DownloadState.Downloading }
@@ -141,6 +143,24 @@ class AppViewModel : ViewModel() {
                 }
             }
         }
+
+    private var seenStates: Map<Long, com.thorium.core.model.DownloadState>? = null
+
+    /** A sound when a download finishes or fails (not for what was already finished when the app opened). */
+    private fun notifyDownloadSounds(all: List<com.thorium.core.model.DownloadItem>) {
+        val previous = seenStates
+        seenStates = all.associate { it.id to it.state }
+        if (previous == null) return
+        for (item in all) {
+            val was = previous[item.id] ?: continue
+            if (was == item.state) continue
+            when (item.state) {
+                com.thorium.core.model.DownloadState.Completed -> sound(UiSound.Done)
+                com.thorium.core.model.DownloadState.Failed -> sound(UiSound.Error)
+                else -> Unit
+            }
+        }
+    }
 
     /** Called after the first queued download so the app can ask for the notification permission. */
     var onDownloadQueued: (() -> Unit)? = null
@@ -498,6 +518,39 @@ class AppViewModel : ViewModel() {
     private fun favoriteGames() = favorites.mapNotNull { id -> library.games.firstOrNull { it.id == id } }
 
     fun handle(action: GamepadAction) {
+        if (action == GamepadAction.Select) com.thorium.core.ui.theme.ThemeState.pulse()
+        val before = focusSignature()
+        skipSelectSound = false
+        dispatch(action)
+        playSoundFor(action, before)
+    }
+
+    /** Everything that moves when the player navigates; used to tell whether a button did something. */
+    private fun focusSignature(): List<Any?> = listOf(
+        tab, focusedRow, rows.getOrNull(focusedRow)?.let { focusedItem(it) }, detail?.id, detailFocus, menuOpen, menuIndex,
+        settings.page, settings.mainIndex, settings.foldersIndex, settings.themesIndex, settings.aboutIndex, settings.browserIndex,
+        settings.sourcesUi.listIndex, settings.sourcesUi.formIndex, downloadsUi.page, downloadsUi.focusIndex, downloadsUi.browse.index,
+        favorites.size,
+    )
+
+    private var skipSelectSound = false
+
+    private fun sound(sound: UiSound) = themeController?.sounds?.play(sound)
+
+    private fun playSoundFor(action: GamepadAction, before: List<Any?>) {
+        val changed = focusSignature() != before
+        when (action) {
+            GamepadAction.Up, GamepadAction.Down, GamepadAction.Left, GamepadAction.Right -> if (changed) sound(UiSound.Move)
+            GamepadAction.TabLeft, GamepadAction.TabRight -> if (changed) sound(UiSound.Tab)
+            GamepadAction.Select -> if (!skipSelectSound) sound(UiSound.Select)
+            GamepadAction.Back -> if (changed) sound(UiSound.Back)
+            GamepadAction.Favorite -> if (favorites.size != before.last()) sound(UiSound.Favorite)
+            GamepadAction.Menu -> if (changed) sound(UiSound.Menu)
+            else -> Unit
+        }
+    }
+
+    private fun dispatch(action: GamepadAction) {
         if (settings.keyboard.handle(action)) return
         when {
             menuOpen -> handleMenu(action)
@@ -570,7 +623,7 @@ class AppViewModel : ViewModel() {
         val launcher = launcherProvider() ?: return
         val system = PlatformCatalog.Default.platforms.firstOrNull { it.id == game.systemId }?.system?.name ?: game.systemId
         when (val result = launcher.launch(game.files.map { it.path }, game.systemId)) {
-            is LaunchResult.Started -> Unit
+            is LaunchResult.Started -> { skipSelectSound = true; sound(UiSound.Launch) }
             LaunchResult.NoEmulator -> showToast(UiText.res(R.string.toast_no_emulator, system))
             LaunchResult.FileMissing -> showToast(UiText.res(R.string.toast_game_missing, game.title))
             is LaunchResult.Failed -> showToast(UiText.res(R.string.toast_launch_failed, result.emulator.name))

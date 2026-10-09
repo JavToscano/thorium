@@ -1,6 +1,16 @@
 package com.thorium.app.ui.main
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -49,7 +59,7 @@ import java.util.Locale
 
 @Composable
 fun ThoriumApp(vm: AppViewModel) {
-    ThemedBackground {
+    ThemedBackground(position = vm.tab.ordinal / (Tab.entries.size - 1f)) {
         Column(Modifier.fillMaxSize()) {
             TabBar(vm.tab)
             Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -66,7 +76,11 @@ fun ThoriumApp(vm: AppViewModel) {
             HintBar(vm.hints.map { it.button to stringResource(it.label) })
         }
 
-        AnimatedVisibility(vm.detail != null, enter = fadeIn() + scaleIn(initialScale = 0.96f), exit = fadeOut() + scaleOut(targetScale = 0.96f)) {
+        AnimatedVisibility(
+            vm.detail != null,
+            enter = fadeIn(tween(240)) + slideInVertically(tween(360, easing = FastOutSlowInEasing)) { it / 14 } + scaleIn(tween(360), initialScale = 0.94f),
+            exit = fadeOut(tween(180)) + scaleOut(tween(180), targetScale = 0.96f),
+        ) {
             vm.detail?.let { DetailScreen(it, vm) }
         }
         AnimatedVisibility(vm.menuOpen, enter = fadeIn(), exit = fadeOut()) { MenuOverlay(vm) }
@@ -75,11 +89,14 @@ fun ThoriumApp(vm: AppViewModel) {
         AnimatedVisibility(
             vm.toast != null,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp),
-            enter = fadeIn(), exit = fadeOut(),
+            enter = fadeIn(tween(160)) + slideInVertically(tween(260, easing = FastOutSlowInEasing)) { it },
+            exit = fadeOut(tween(200)) + slideOutVertically(tween(200)) { it / 2 },
         ) {
             Text(
                 vm.toast?.resolve().orEmpty(),
-                modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Palette.Panel).padding(horizontal = 18.dp, vertical = 8.dp),
+                modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Palette.PanelFocused)
+                    .border(1.dp, Palette.Accent.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 18.dp, vertical = 8.dp),
                 color = Palette.TextPrimary, fontSize = 14.sp,
             )
         }
@@ -116,12 +133,22 @@ private fun RowsScreen(vm: AppViewModel) {
 @Composable
 private fun DetailScreen(game: Game, vm: AppViewModel) {
     val system = vm.systemOf(game)
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.88f))) {
+    val art = rememberCoverArt(vm.coverOf(game))
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f))) {
+        // The game's own cover, enlarged and blurred, tints the whole screen with its colors.
+        if (art != null) {
+            Image(
+                art, contentDescription = null,
+                modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.3f; scaleY = 1.3f; alpha = 0.55f }.blur(36.dp),
+                contentScale = ContentScale.Crop,
+            )
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.85f)))))
+        }
         Row(
             Modifier.align(Alignment.Center).padding(Dimens.ScreenPadding),
             horizontalArrangement = Arrangement.spacedBy(28.dp),
         ) {
-            Cover(game.title, system, focused = false, progress = game.progress, favorite = vm.isFavorite(game.id), width = 150.dp, height = 200.dp, art = rememberCoverArt(vm.coverOf(game)))
+            Cover(game.title, system, focused = false, progress = game.progress, favorite = vm.isFavorite(game.id), width = 150.dp, height = 200.dp, art = art, glow = true)
             Column(Modifier.width(420.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(game.title, color = Palette.TextPrimary, fontSize = 26.sp, fontWeight = FontWeight.Bold)
                 Text(listOfNotNull(system.name, vm.matchOf(game)?.entry?.region).joinToString(" · "), color = Palette.Accent, fontSize = 15.sp)

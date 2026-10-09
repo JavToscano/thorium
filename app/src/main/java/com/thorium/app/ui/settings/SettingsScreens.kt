@@ -1,6 +1,14 @@
 package com.thorium.app.ui.settings
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -31,21 +39,39 @@ import androidx.compose.ui.res.stringResource
 import com.thorium.app.R
 import com.thorium.app.ui.main.LanguageChoice
 import com.thorium.core.ui.theme.Dimens
+import com.thorium.core.ui.components.focusBorderBrush
+import com.thorium.core.ui.components.focusGlow
+import com.thorium.core.ui.components.focusShine
 import com.thorium.core.ui.theme.Palette
+import com.thorium.core.ui.theme.ThemeShapes
+import com.thorium.core.ui.theme.ThemeState
 import com.thorium.data.library.SetupEntry
 
 @Composable
 fun SettingsScreen(controller: SettingsController) {
-    when (controller.page) {
-        SettingsPage.Main -> MainPage(controller)
-        SettingsPage.Folders -> FoldersPage(controller)
-        SettingsPage.Browser -> BrowserPage(controller)
-        SettingsPage.Setup -> SetupPage(controller)
-        SettingsPage.Sources -> SourcesPage(controller)
-        SettingsPage.SourceForm -> SourceFormPage(controller)
-        SettingsPage.SourceConsole -> SourceConsolePage(controller)
-        SettingsPage.About -> AboutPage(controller)
-        SettingsPage.Themes -> ThemesPage(controller)
+    val ms = ThemeState.spec.motion.pageMs
+    // Going deeper slides the new page in from the right; coming back brings the old one in from the left.
+    AnimatedContent(
+        targetState = controller.page,
+        transitionSpec = {
+            val deeper = targetState != SettingsPage.Main
+            val offset: (Int) -> Int = { width -> if (deeper) width / 10 else -width / 10 }
+            (fadeIn(tween(ms)) + slideInHorizontally(tween(ms, easing = FastOutSlowInEasing), offset)) togetherWith
+                (fadeOut(tween(ms / 2)) + slideOutHorizontally(tween(ms, easing = FastOutSlowInEasing)) { -offset(it) })
+        },
+        label = "settingsPage",
+    ) { page ->
+        when (page) {
+            SettingsPage.Main -> MainPage(controller)
+            SettingsPage.Folders -> FoldersPage(controller)
+            SettingsPage.Browser -> BrowserPage(controller)
+            SettingsPage.Setup -> SetupPage(controller)
+            SettingsPage.Sources -> SourcesPage(controller)
+            SettingsPage.SourceForm -> SourceFormPage(controller)
+            SettingsPage.SourceConsole -> SourceConsolePage(controller)
+            SettingsPage.About -> AboutPage(controller)
+            SettingsPage.Themes -> ThemesPage(controller)
+        }
     }
 }
 
@@ -78,10 +104,12 @@ internal fun <T> FocusList(items: List<T>, focusedIndex: Int, row: @Composable (
 @Composable
 internal fun ListRow(title: String, detail: String?, focused: Boolean, trailing: String? = null) {
     val bg by animateColorAsState(if (focused) Palette.PanelFocused else Palette.Panel, label = "row")
-    val border by animateColorAsState(if (focused) Palette.Accent else Color.Transparent, label = "rowBorder")
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(bg)
-            .border(2.dp, border, RoundedCornerShape(10.dp))
+        Modifier.fillMaxWidth()
+            .focusGlow(focused, ThemeState.spec.shapes.panelRadius.dp)
+            .clip(ThemeShapes.Panel).background(bg)
+            .focusShine(focused)
+            .border(2.dp, focusBorderBrush(focused), ThemeShapes.Panel)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

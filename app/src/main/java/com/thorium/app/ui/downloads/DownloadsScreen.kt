@@ -1,5 +1,14 @@
 package com.thorium.app.ui.downloads
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -33,13 +42,26 @@ import com.thorium.core.model.DownloadItem
 import com.thorium.core.model.DownloadState
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
+import com.thorium.core.ui.theme.ThemeState
 
 @Composable
 fun DownloadsScreen(c: DownloadsController, speeds: Map<Long, Long>) {
-    when (c.page) {
-        DownloadsPage.Main -> MainPage(c, speeds)
-        DownloadsPage.Browse -> BrowsePage(c)
-        DownloadsPage.PlatformPick -> PlatformPickPage(c)
+    val ms = ThemeState.spec.motion.pageMs
+    AnimatedContent(
+        targetState = c.page,
+        transitionSpec = {
+            val deeper = targetState != DownloadsPage.Main
+            val offset: (Int) -> Int = { width -> if (deeper) width / 10 else -width / 10 }
+            (fadeIn(tween(ms)) + slideInHorizontally(tween(ms, easing = FastOutSlowInEasing), offset)) togetherWith
+                (fadeOut(tween(ms / 2)) + slideOutHorizontally(tween(ms, easing = FastOutSlowInEasing)) { -offset(it) })
+        },
+        label = "downloadsPage",
+    ) { page ->
+        when (page) {
+            DownloadsPage.Main -> MainPage(c, speeds)
+            DownloadsPage.Browse -> BrowsePage(c)
+            DownloadsPage.PlatformPick -> PlatformPickPage(c)
+        }
     }
 }
 

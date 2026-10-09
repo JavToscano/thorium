@@ -81,7 +81,9 @@ object ThemeLoader {
 
     private fun decode(source: ThemeSource, path: String, maxWidth: Int): ImageBitmap? {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        source.open(path)?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return null
+        // Measuring only returns no bitmap, so the file's presence is checked on its own.
+        val measuring = source.open(path) ?: return null
+        measuring.use { BitmapFactory.decodeStream(it, null, bounds) }
         if (bounds.outWidth <= 0) return null
         var sample = 1
         while (bounds.outWidth / (sample * 2) >= maxWidth) sample *= 2

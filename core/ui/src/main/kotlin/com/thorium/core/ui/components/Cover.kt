@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -32,6 +33,8 @@ import androidx.compose.ui.zIndex
 import com.thorium.core.model.GameSystem
 import com.thorium.core.ui.theme.Dimens
 import com.thorium.core.ui.theme.Palette
+import com.thorium.core.ui.theme.ThemeShapes
+import com.thorium.core.ui.theme.ThemeState
 
 /** Two-stop gradient derived from a system hue; used by covers and system tiles. */
 fun systemColors(hue: Float): List<Color> = listOf(
@@ -51,25 +54,29 @@ fun Cover(
     height: Dp = Dimens.CardHeight,
     /** The real cover when there is one; replaces the placeholder badge and title. */
     art: ImageBitmap? = null,
+    /** Shows the halo even when not focused (the big cover on the second screen). */
+    glow: Boolean = false,
 ) {
-    val scale = focusScale(focused)
-    val border = focusBorder(focused)
     Box(
         Modifier
             .zIndex(if (focused) 1f else 0f)
             .size(width, height)
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .clip(RoundedCornerShape(10.dp))
+            .focusLayer(focused)
+            .focusGlow(focused || glow, ThemeState.spec.shapes.cardRadius.dp)
+            .clip(ThemeShapes.Card)
             .background(Brush.verticalGradient(systemColors(system.hue)))
-            .border(3.dp, border, RoundedCornerShape(10.dp))
+            .focusShine(focused)
+            .border(ThemeShapes.Border, focusBorderBrush(focused), ThemeShapes.Card)
     ) {
         if (art != null) {
-            // Whole cover, never cropped: box art comes in different shapes.
+            // The same cover, enlarged and blurred, fills the bars a wide cover leaves above and below it.
             Image(
-                art, contentDescription = title,
-                modifier = Modifier.fillMaxSize().background(Palette.Panel),
-                contentScale = ContentScale.Fit,
+                art, contentDescription = null,
+                modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.55f }.blur(18.dp),
+                contentScale = ContentScale.Crop,
             )
+            // Whole cover, never cropped: box art comes in different shapes.
+            Image(art, contentDescription = title, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
         } else {
             Text(
                 system.shortName,

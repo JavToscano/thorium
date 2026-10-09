@@ -6,6 +6,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Brush
@@ -60,6 +61,11 @@ object ThemeState {
 
     /** Turns off particles, pulses and shine (movement itself stays); a user preference. */
     var animations by mutableStateOf(true)
+
+    /** Counts confirmations (A pressed); the focused item squeezes each time it changes. */
+    var pulse by mutableIntStateOf(0); private set
+
+    fun pulse() { pulse += 1 }
 
     fun apply(spec: ThemeSpec, assets: ThemeAssets = ThemeAssets.Empty) {
         this.spec = spec
